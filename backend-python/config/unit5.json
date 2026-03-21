@@ -1,0 +1,10 @@
+{
+  "unit": 5,
+  "name": "Compare and Contrast Essay",
+
+  "constraints": {
+    "require_advantage": false,
+    "min_explanation_sentences": 1,
+    "min_example_sentences": 1
+  }
+}

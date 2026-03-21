@@ -1,0 +1,10 @@
+{
+  "unit": 6,
+  "name": "Argument Essay",
+
+  "constraints": {
+    "require_opinion": true,
+    "min_explanation_sentences": 2,
+    "min_example_sentences": 1
+  }
+}

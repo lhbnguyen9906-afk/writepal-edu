@@ -1,0 +1,10 @@
+{
+  "unit": 3,
+  "name": "Problem and Solution Essay",
+
+  "constraints": {
+    "require_problem": true,
+    "require_solution": true,
+    "min_explanation_sentences": 1
+  }
+}

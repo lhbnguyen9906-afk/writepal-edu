@@ -1,0 +1,10 @@
+{
+  "unit": 4,
+  "name": "Cause and Effect Essay",
+
+  "constraints": {
+    "require_cause": true,
+    "require_effect": true,
+    "min_explanation_sentences": 1
+  }
+}

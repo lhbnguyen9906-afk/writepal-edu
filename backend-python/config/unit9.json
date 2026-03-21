@@ -1,0 +1,10 @@
+{
+  "unit": 9,
+  "name": "Complex Essay",
+
+  "constraints": {
+    "require_cause": true,
+    "require_problem": true,
+    "require_solution": true
+  }
+}

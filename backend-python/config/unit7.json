@@ -1,0 +1,10 @@
+{
+  "unit": 7,
+  "name": "Discussion Essay",
+
+  "constraints": {
+    "require_opinion": true,
+    "require_advantage": true,
+    "require_disadvantage": true
+  }
+}

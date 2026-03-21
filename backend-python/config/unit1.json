@@ -1,0 +1,52 @@
+{
+  "unit": 1,
+  "name": "Opinion Paragraph",
+
+  "detection_rules": {
+    "opinion_markers": [
+      "i think",
+      "i believe",
+      "in my opinion",
+      "i agree",
+      "i disagree"
+    ],
+    "example_markers": [
+      "for example",
+      "for instance",
+      "such as"
+    ],
+    "explanation_markers": [
+      "because",
+      "since",
+      "therefore",
+      "as a result"
+    ],
+    "personal_pronouns": [
+      "i",
+      "my",
+      "me"
+    ]
+  },
+
+  "constraints": {
+    "min_sentences": 3,
+    "min_explanation_sentences": 1,
+    "min_example_sentences": 1
+  },
+
+  "error_priority": [
+    "too_short",
+    "opinion_missing",
+    "no_explanation",
+    "no_example",
+    "positive"
+  ],
+
+  "feedback_map": {
+    "too_short": "Your paragraph is too short. Try writing at least 3 sentences.",
+    "opinion_missing": "Your paragraph does not clearly state your opinion.",
+    "no_explanation": "You should explain your idea using words like 'because' or 'therefore'.",
+    "no_example": "Try adding an example to support your idea.",
+    "positive": "Good job! Your paragraph clearly presents and supports your opinion."
+  }
+}

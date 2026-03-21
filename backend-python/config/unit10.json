@@ -1,0 +1,13 @@
+{
+  "unit": 10,
+  "name": "Academic Structured Essay",
+
+  "constraints": {
+    "require_opinion": true,
+    "require_advantage": true,
+    "require_disadvantage": true,
+    "require_solution": true,
+    "min_explanation_sentences": 2,
+    "min_example_sentences": 2
+  }
+}

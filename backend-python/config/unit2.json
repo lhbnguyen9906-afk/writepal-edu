@@ -1,0 +1,64 @@
+{
+  "unit": 2,
+  "name": "Advantages and Disadvantages Essay",
+
+  "detection_rules": {
+    "opinion_markers": [
+      "i think",
+      "i believe",
+      "in my opinion",
+      "i agree",
+      "i disagree"
+    ],
+    "advantage_markers": [
+      "advantage",
+      "benefit",
+      "positive",
+      "good point"
+    ],
+    "disadvantage_markers": [
+      "disadvantage",
+      "drawback",
+      "negative",
+      "bad point"
+    ],
+    "example_markers": [
+      "for example",
+      "for instance",
+      "such as"
+    ],
+    "explanation_markers": [
+      "because",
+      "since",
+      "as",
+      "therefore"
+    ],
+    "personal_pronouns": [
+      "i",
+      "my",
+      "me"
+    ]
+  },
+
+  "constraints": {
+    "min_sentences": 2,
+    "min_explanation_sentences": 1,
+    "require_example": true
+  },
+
+  "error_priority": [
+    "opinion_missing",
+    "no_advantage",
+    "no_disadvantage",
+    "no_example",
+    "positive"
+  ],
+
+  "feedback_map": {
+    "opinion_missing": "You need to clearly state your opinion about the topic.",
+    "no_advantage": "You should discuss at least one advantage.",
+    "no_disadvantage": "You should discuss at least one disadvantage.",
+    "no_example": "Try adding an example to support your idea.",
+    "positive": "Good job! Your paragraph includes advantages and disadvantages clearly."
+  }
+}

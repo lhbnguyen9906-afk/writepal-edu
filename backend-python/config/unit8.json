@@ -1,0 +1,10 @@
+{
+  "unit": 8,
+  "name": "Opinion with Counterargument",
+
+  "constraints": {
+    "require_opinion": true,
+    "require_disadvantage": true,
+    "min_explanation_sentences": 2
+  }
+}
