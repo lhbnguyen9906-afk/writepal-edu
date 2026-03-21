@@ -1,14 +1,16 @@
 import { useEffect, useState } from "react";
 
+const API_URL = "https://writepal-edu-production.up.railway.app";
+
 function ChatPage() {
   const [conversationId, setConversationId] = useState(null);
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
 
-  // Tạo conversation khi vào trang
+  // tạo conversation
   useEffect(() => {
     async function createConversation() {
-      const res = await fetch("http://127.0.0.1:8000/conversations", {
+      const res = await fetch(`${API_URL}/conversations`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ user_id: 1 })
@@ -21,13 +23,13 @@ function ChatPage() {
     createConversation();
   }, []);
 
-  // Load messages khi có conversationId
+  // load messages
   useEffect(() => {
     if (!conversationId) return;
 
     async function loadMessages() {
       const res = await fetch(
-        `http://127.0.0.1:8000/messages?conversation_id=${conversationId}`
+        `${API_URL}/messages?conversation_id=${conversationId}`
       );
 
       const data = await res.json();
@@ -37,10 +39,11 @@ function ChatPage() {
     loadMessages();
   }, [conversationId]);
 
+  // send message
   async function sendMessage() {
     if (!input.trim()) return;
 
-    const res = await fetch("http://127.0.0.1:8000/chat", {
+    const res = await fetch(`${API_URL}/chat`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -66,7 +69,7 @@ function ChatPage() {
 
       <div style={{ marginBottom: 20 }}>
         {messages.map((msg, index) => (
-          <div key={index} style={{ marginBottom: 10 }}>
+          <div key={index}>
             <strong>{msg.role}:</strong> {msg.content}
           </div>
         ))}
@@ -75,7 +78,6 @@ function ChatPage() {
       <input
         value={input}
         onChange={e => setInput(e.target.value)}
-        style={{ width: "60%", marginRight: 10 }}
       />
 
       <button onClick={sendMessage}>
