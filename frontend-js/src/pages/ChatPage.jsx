@@ -1,29 +1,48 @@
 import { useEffect, useState } from "react";
 
-const API_URL = "https://writepal-edu-production.up.railway.app";
+const API_URL = import.meta.env.VITE_API_URL;
+// ví dụ: https://writepal-edu-production.up.railway.app
 
 function ChatPage() {
+  const [userId, setUserId] = useState(null);
   const [conversationId, setConversationId] = useState(null);
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
 
-  // tạo conversation
+  // 🔥 LOGIN (tạo user)
   useEffect(() => {
-    async function createConversation() {
-      const res = await fetch(`${API_URL}/conversations`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ user_id: 1 })
+    async function login() {
+      const res = await fetch(`${API_URL}/login?username=test`, {
+        method: "POST"
       });
+
+      const data = await res.json();
+      setUserId(data.user_id);
+    }
+
+    login();
+  }, []);
+
+  // 🔥 TẠO CONVERSATION
+  useEffect(() => {
+    if (!userId) return;
+
+    async function createConversation() {
+      const res = await fetch(
+        `${API_URL}/conversations?user_id=${userId}`,
+        {
+          method: "POST"
+        }
+      );
 
       const data = await res.json();
       setConversationId(data.conversation_id);
     }
 
     createConversation();
-  }, []);
+  }, [userId]);
 
-  // load messages
+  // 🔥 LOAD HISTORY
   useEffect(() => {
     if (!conversationId) return;
 
@@ -39,25 +58,36 @@ function ChatPage() {
     loadMessages();
   }, [conversationId]);
 
-  // send message
+  // 🔥 SEND MESSAGE
   async function sendMessage() {
     if (!input.trim()) return;
 
+    // show user message ngay
+    setMessages(prev => [
+      ...prev,
+      { role: "user", content: input }
+    ]);
+
     const res = await fetch(`${API_URL}/chat`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json"
+      },
       body: JSON.stringify({
         conversation_id: conversationId,
-        text: input
+        text: input,
+        user_id: userId,
+        mode: "tutor",
+        language: "en"
       })
     });
 
     const data = await res.json();
 
+    // 🔥 FIX QUAN TRỌNG: response (không phải reply)
     setMessages(prev => [
       ...prev,
-      { role: "user", content: input },
-      { role: "assistant", content: data.reply }
+      { role: "assistant", content: data.response }
     ]);
 
     setInput("");
@@ -69,7 +99,7 @@ function ChatPage() {
 
       <div style={{ marginBottom: 20 }}>
         {messages.map((msg, index) => (
-          <div key={index}>
+          <div key={index} style={{ marginBottom: 10 }}>
             <strong>{msg.role}:</strong> {msg.content}
           </div>
         ))}
@@ -78,6 +108,8 @@ function ChatPage() {
       <input
         value={input}
         onChange={e => setInput(e.target.value)}
+        style={{ width: "60%", marginRight: 10 }}
+        placeholder="Type something..."
       />
 
       <button onClick={sendMessage}>
