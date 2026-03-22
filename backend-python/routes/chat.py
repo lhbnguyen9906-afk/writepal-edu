@@ -5,18 +5,26 @@ from database import get_db
 from models import Message
 from schemas import ChatRequest
 
-import google.generativeai as genai
-from dotenv import load_dotenv
 import os
+from dotenv import load_dotenv
+import google.generativeai as genai  # type: ignore
 
+# =========================
+# INIT
+# =========================
 load_dotenv()
 
-genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
-model = genai.GenerativeModel("gemini-2.5-flash")
+genai.configure(api_key=os.getenv("GOOGLE_API_KEY"))  # type: ignore
+
+# 👉 MODEL MỚI
+model = genai.GenerativeModel("gemini-2.5-flash")  # type: ignore
 
 router = APIRouter()
 
 
+# =========================
+# GET HISTORY
+# =========================
 def get_history(db, conversation_id):
     msgs = db.query(Message).filter(
         Message.conversation_id == conversation_id
@@ -24,13 +32,16 @@ def get_history(db, conversation_id):
 
     history = []
     for m in msgs:
-        role = "user" if str(m.role) == "user" else "assistant"
+        role = "user" if m.role == "user" else "assistant"
         history.append(f"{role}: {m.content}")
 
     return "\n".join(history[-6:])
 
 
-def build_prompt(history, user_input, mode, language):
+# =========================
+# BUILD PROMPT
+# =========================
+def build_prompt(history, user_input, mode="tutor", language="en"):
 
     if language == "vi":
         lang = "Giải thích bằng tiếng Việt. KHÔNG đưa đáp án hoàn chỉnh."
@@ -67,9 +78,13 @@ Format:
 """
 
 
+# =========================
+# API CHAT
+# =========================
 @router.post("/chat")
 def chat(req: ChatRequest, db: Session = Depends(get_db)):
 
+    # 1. lưu user message
     db.add(Message(
         conversation_id=req.conversation_id,
         role="user",
@@ -77,16 +92,27 @@ def chat(req: ChatRequest, db: Session = Depends(get_db)):
     ))
     db.commit()
 
+    # 2. lấy history
     history = get_history(db, req.conversation_id)
 
-    prompt = build_prompt(history, req.text, req.mode, req.language)
+    # 3. build prompt
+    prompt = build_prompt(
+        history,
+        req.text,
+        getattr(req, "mode", "tutor"),
+        getattr(req, "language", "en")
+    )
 
     try:
+        # 4. gọi Gemini
         res = model.generate_content(prompt)
-        reply = res.text
-    except Exception:
-        reply = "⚠️ AI unavailable"
+        reply = res.text if res and res.text else "⚠️ No response"
 
+    except Exception as e:
+        print("GEMINI ERROR:", e)
+        reply = f"⚠️ AI unavailable: {str(e)}"
+
+    # 5. lưu bot reply
     db.add(Message(
         conversation_id=req.conversation_id,
         role="assistant",
