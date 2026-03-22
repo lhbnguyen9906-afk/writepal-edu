@@ -1,3 +1,4 @@
+print("🔥 CHAT API NEW VERSION RUNNING")
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
