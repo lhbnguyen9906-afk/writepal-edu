@@ -1,51 +1,52 @@
-print("🔥 CHAT API NEW VERSION RUNNING")
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
+from typing import List
 
 from database import get_db
 from models import Message
 from schemas import ChatRequest
 
-# pyright: reportPrivateImportUsage=false
-import google.generativeai as genai
-
+from google import genai
 from dotenv import load_dotenv
 import os
 
 router = APIRouter()
 
 # =========================
-# INIT AI (SAFE)
+# INIT AI
 # =========================
-load_dotenv()
+print("🔥 CHAT API FINAL")
 
+load_dotenv()
 api_key = os.getenv("GOOGLE_API_KEY")
 
 if not api_key:
-    print("⚠️ WARNING: GOOGLE_API_KEY not found")
-    model = None
-else:
-    genai.configure(api_key=api_key)
-    model = genai.GenerativeModel("gemini-2.5-flash")
+    raise RuntimeError("❌ GOOGLE_API_KEY not found")
+
+client = genai.Client(api_key=api_key)
 
 
 # =========================
-# MEMORY
+# MEMORY (NO RED)
 # =========================
-def get_history(db: Session, conversation_id: int):
-    msgs = (
+def get_history(db: Session, conversation_id: int) -> str:
+    msgs: List[Message] = (
         db.query(Message)
         .filter(Message.conversation_id == conversation_id)
         .order_by(Message.created_at.asc())
         .all()
     )
 
-    history = []
-    for m in msgs[-30:]:
-        role = "User" if str(m.role) == "user" else "Assistant"
-        history.append(f"{role}: {m.content}")
+    lines: List[str] = []
 
-    return "\n".join(history)
+    for m in msgs[-30:]:
+        role: str = m.role
+        content: str = m.content
+
+        speaker: str = "User" if role == "user" else "Assistant"
+        lines.append(f"{speaker}: {content}")
+
+    return "\n".join(lines)
 
 
 # =========================
@@ -54,16 +55,12 @@ def get_history(db: Session, conversation_id: int):
 @router.post("/chat")
 def chat(req: ChatRequest, db: Session = Depends(get_db)):
     try:
-        if model is None:
-            raise HTTPException(status_code=500, detail="AI not configured")
-
-        mode = req.mode or "vi_en"
         history = get_history(db, req.conversation_id)
 
         prompt = f"""
 You are WritePal-Edu.
 
-Mode: {mode}
+Mode: {req.mode}
 
 History:
 {history}
@@ -74,10 +71,15 @@ User:
 Answer:
 """
 
-        response = model.generate_content(prompt)
+        print("🔥 GEMINI CALLED")
+
+        response = client.models.generate_content(
+            model="gemini-2.5-flash",
+            contents=prompt
+        )
 
         if not response or not response.text:
-            raise ValueError("Empty response from AI")
+            raise ValueError("Empty response")
 
         answer = response.text
 
@@ -98,4 +100,5 @@ Answer:
         return {"response": answer}
 
     except Exception as e:
+        print("ERROR:", str(e))
         raise HTTPException(status_code=500, detail=str(e))
