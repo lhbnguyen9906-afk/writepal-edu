@@ -12,23 +12,19 @@ import os
 
 router = APIRouter()
 
-# =========================
-# INIT AI
-# =========================
-print("🔥 CHAT API FINAL")
+print("🔥 CHAT API SAFE VERSION")
 
 load_dotenv()
 api_key = os.getenv("GOOGLE_API_KEY")
 
+# 🔥 KHÔNG CRASH NỮA
 if not api_key:
-    raise RuntimeError("❌ GOOGLE_API_KEY not found")
+    print("⚠️ GOOGLE_API_KEY not found")
+    client = None
+else:
+    client = genai.Client(api_key=api_key)
 
-client = genai.Client(api_key=api_key)
 
-
-# =========================
-# MEMORY (NO RED)
-# =========================
 def get_history(db: Session, conversation_id: int) -> str:
     msgs: List[Message] = (
         db.query(Message)
@@ -37,30 +33,27 @@ def get_history(db: Session, conversation_id: int) -> str:
         .all()
     )
 
-    lines: List[str] = []
-
+    lines = []
     for m in msgs[-30:]:
         role: str = m.role
         content: str = m.content
 
-        speaker: str = "User" if role == "user" else "Assistant"
+        speaker = "User" if role == "user" else "Assistant"
         lines.append(f"{speaker}: {content}")
 
     return "\n".join(lines)
 
 
-# =========================
-# CHAT API
-# =========================
 @router.post("/chat")
 def chat(req: ChatRequest, db: Session = Depends(get_db)):
     try:
+        if client is None:
+            raise HTTPException(status_code=500, detail="AI not configured")
+
         history = get_history(db, req.conversation_id)
 
         prompt = f"""
 You are WritePal-Edu.
-
-Mode: {req.mode}
 
 History:
 {history}
@@ -77,9 +70,6 @@ Answer:
             model="gemini-2.5-flash",
             contents=prompt
         )
-
-        if not response or not response.text:
-            raise ValueError("Empty response")
 
         answer = response.text
 
