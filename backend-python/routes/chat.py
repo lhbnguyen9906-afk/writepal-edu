@@ -5,86 +5,66 @@ from database import get_db
 from models import Message
 from schemas import ChatRequest
 
-import os
+from google import genai
 from dotenv import load_dotenv
-import google.generativeai as genai  # type: ignore
+import os
 
-# =========================
-# INIT
-# =========================
+# 🔥 Load ENV
 load_dotenv()
 
-genai.configure(api_key=os.getenv("GOOGLE_API_KEY"))  # type: ignore
-
-# 👉 MODEL MỚI
-model = genai.GenerativeModel("gemini-2.5-flash")  # type: ignore
+# 🔥 Init Gemini client (API mới)
+client = genai.Client(api_key=os.getenv("GOOGLE_API_KEY"))
 
 router = APIRouter()
 
 
-# =========================
-# GET HISTORY
-# =========================
-def get_history(db, conversation_id):
+# 🧠 Memory (lấy 30 messages gần nhất)
+def get_history(db: Session, conversation_id: int):
     msgs = db.query(Message).filter(
         Message.conversation_id == conversation_id
     ).order_by(Message.created_at.asc()).all()
 
     history = []
-    for m in msgs:
-        role = "user" if m.role == "user" else "assistant"
-        history.append(f"{role}: {m.content}")
+    for m in msgs[-30:]:
+        role = "User" if getattr(m, "role", "") == "user" else "Assistant"
+        content = getattr(m, "content", "").strip()
+        history.append(f"{role}: {content}")
 
-    return "\n".join(history[-6:])
+    return "\n".join(history)
 
 
-# =========================
-# BUILD PROMPT
-# =========================
-def build_prompt(history, user_input, mode="tutor", language="en"):
-
-    if language == "vi":
-        lang = "Giải thích bằng tiếng Việt. KHÔNG đưa đáp án hoàn chỉnh."
-    else:
-        lang = "Explain in English. DO NOT give full answers."
-
+# 🎯 Prompt builder (WritePal-Edu)
+def build_prompt(req: ChatRequest, history: str):
     return f"""
-You are WritePal-Edu, a guided writing tutor.
+You are WritePal-Edu, an AI academic writing assistant designed for university students.
+
+Your job:
+- Help users improve writing skills
+- Explain clearly and simply
+- Give structured feedback
+- Be supportive but insightful
+
+Mode: {req.mode}
+Language: {req.language}
+
+Instructions by mode:
+- tutor → explain mistakes, ask guiding questions
+- structure → analyze essay structure
+- outline → generate outline
+- rewrite → rewrite with improvements + explanation
 
 Conversation:
 {history}
 
-Student:
-"{user_input}"
-
-Mode: {mode}
-
-{lang}
-
-Rules:
-- Give hints only
-- Ask 2–4 questions
-- Do NOT rewrite full answer
-
-Format:
-
-### 🧠 Insight
-
-### 🔍 Think about this
-- question
-- question
-
-### ✏️ Your Turn
+User input:
+"{req.text}"
 """
 
 
-# =========================
-# API CHAT
-# =========================
 @router.post("/chat")
 def chat(req: ChatRequest, db: Session = Depends(get_db)):
 
-    # 1. lưu user message
+    # 🔹 1. Save user message
     db.add(Message(
         conversation_id=req.conversation_id,
         role="user",
@@ -92,27 +72,25 @@ def chat(req: ChatRequest, db: Session = Depends(get_db)):
     ))
     db.commit()
 
-    # 2. lấy history
+    # 🔹 2. Get history
     history = get_history(db, req.conversation_id)
 
-    # 3. build prompt
-    prompt = build_prompt(
-        history,
-        req.text,
-        getattr(req, "mode", "tutor"),
-        getattr(req, "language", "en")
-    )
+    # 🔹 3. Build prompt
+    prompt = build_prompt(req, history)
 
+    # 🔹 4. Call Gemini
     try:
-        # 4. gọi Gemini
-        res = model.generate_content(prompt)
-        reply = res.text if res and res.text else "⚠️ No response"
+        res = client.models.generate_content(
+            model="gemini-2.5-flash",
+            contents=prompt
+        )
+
+        reply = res.text if hasattr(res, "text") and res.text else "⚠️ Empty response"
 
     except Exception as e:
-        print("GEMINI ERROR:", e)
-        reply = f"⚠️ AI unavailable: {str(e)}"
+        reply = f"⚠️ AI error: {str(e)}"
 
-    # 5. lưu bot reply
+    # 🔹 5. Save assistant message
     db.add(Message(
         conversation_id=req.conversation_id,
         role="assistant",
@@ -120,5 +98,5 @@ def chat(req: ChatRequest, db: Session = Depends(get_db)):
     ))
     db.commit()
 
+    # 🔹 6. Return response
     return {"response": reply}
-print("USING KEY:", os.getenv("GOOGLE_API_KEY"))
