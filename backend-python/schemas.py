@@ -4,9 +4,12 @@ from pydantic import BaseModel
 class ChatRequest(BaseModel):
     conversation_id: int
     text: str
-    user_id: int
     mode: str = "tutor"
     language: str = "en"
+
+
+class ConversationCreate(BaseModel):
+    user_id: int
 
 
 class UserCreate(BaseModel):
