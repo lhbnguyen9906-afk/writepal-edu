@@ -14,7 +14,7 @@ import os
 router = APIRouter()
 
 # =========================
-# 🔥 INIT AI (SAFE)
+# INIT AI (SAFE)
 # =========================
 load_dotenv()
 
@@ -29,7 +29,7 @@ else:
 
 
 # =========================
-# 🧠 MEMORY
+# MEMORY
 # =========================
 def get_history(db: Session, conversation_id: int):
     msgs = (
@@ -48,74 +48,31 @@ def get_history(db: Session, conversation_id: int):
 
 
 # =========================
-# 🚀 CHAT API
+# CHAT API
 # =========================
 @router.post("/chat")
 def chat(req: ChatRequest, db: Session = Depends(get_db)):
     try:
         if model is None:
-            raise HTTPException(status_code=500, detail="AI model not configured")
+            raise HTTPException(status_code=500, detail="AI not configured")
 
-        # 👉 fallback mode (tránh frontend quên gửi)
         mode = req.mode or "vi_en"
-
         history = get_history(db, req.conversation_id)
 
         prompt = f"""
-You are WritePal-Edu, an AI writing assistant for university students.
+You are WritePal-Edu.
 
 Mode: {mode}
 
-Conversation history:
+History:
 {history}
 
-User message:
+User:
 {req.message}
 
-=========================
-INSTRUCTIONS
-=========================
-
-GENERAL:
-- Be clear, structured, and helpful
-
-LANGUAGE RULE:
-- If user writes in Vietnamese → explain in Vietnamese
-- BUT keep ALL quoted / rewritten text in English
-
-MODE RULES:
-
-1. structure:
-- Analyze structure (Vietnamese explanation)
-- Keep examples in English
-
-2. tutor:
-- Explain mistakes in Vietnamese
-- Quote original sentences in English
-
-3. rewrite:
-- Rewrite in English
-- Explain changes in Vietnamese
-
-4. outline:
-- Explain outline in Vietnamese
-- Keep headings/examples in English
-
-5. vi_en:
-- Explanation → Vietnamese
-- Text / examples / quotes → English
-
-FORMAT:
-- Use bullet points when helpful
-- Separate explanation and examples clearly
-
-=========================
-ANSWER:
+Answer:
 """
 
-        # =========================
-        # 🔥 CALL GEMINI
-        # =========================
         response = model.generate_content(prompt)
 
         if not response or not response.text:
@@ -123,18 +80,12 @@ ANSWER:
 
         answer = response.text
 
-        # =========================
-        # 💾 SAVE USER
-        # =========================
         db.add(Message(
             conversation_id=req.conversation_id,
             role="user",
             content=req.message
         ))
 
-        # =========================
-        # 💾 SAVE BOT
-        # =========================
         db.add(Message(
             conversation_id=req.conversation_id,
             role="assistant",
@@ -146,5 +97,4 @@ ANSWER:
         return {"response": answer}
 
     except Exception as e:
-        print("ERROR:", str(e))
         raise HTTPException(status_code=500, detail=str(e))
