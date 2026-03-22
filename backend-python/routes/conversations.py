@@ -10,7 +10,6 @@ router = APIRouter()
 
 @router.post("/conversations")
 def create_conversation(req: ConversationCreate, db: Session = Depends(get_db)):
-
     conv = Conversation(user_id=req.user_id)
 
     db.add(conv)

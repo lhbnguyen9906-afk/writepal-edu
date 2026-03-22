@@ -1,23 +1,16 @@
 from pydantic import BaseModel
 
-
+# =========================
+# CHAT
+# =========================
 class ChatRequest(BaseModel):
     conversation_id: int
-    text: str
-    mode: str = "tutor"
-    language: str = "en"
+    message: str
+    mode: str
 
 
+# =========================
+# CONVERSATION
+# =========================
 class ConversationCreate(BaseModel):
     user_id: int
-
-
-class UserCreate(BaseModel):
-    name: str
-    email: str
-
-
-class PreSurveyCreate(BaseModel):
-    user_id: int
-    level: str
-    goal: str
