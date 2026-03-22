@@ -121,3 +121,4 @@ def chat(req: ChatRequest, db: Session = Depends(get_db)):
     db.commit()
 
     return {"response": reply}
+print("USING KEY:", os.getenv("GOOGLE_API_KEY"))
