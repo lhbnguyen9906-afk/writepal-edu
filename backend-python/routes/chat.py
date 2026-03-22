@@ -9,16 +9,19 @@ from google import genai
 from dotenv import load_dotenv
 import os
 
-# 🔥 Load ENV
+# =========================
+# INIT
+# =========================
 load_dotenv()
 
-# 🔥 Init Gemini client (API mới)
 client = genai.Client(api_key=os.getenv("GOOGLE_API_KEY"))
 
 router = APIRouter()
 
 
-# 🧠 Memory (lấy 30 messages gần nhất)
+# =========================
+# MEMORY
+# =========================
 def get_history(db: Session, conversation_id: int):
     msgs = db.query(Message).filter(
         Message.conversation_id == conversation_id
@@ -33,38 +36,44 @@ def get_history(db: Session, conversation_id: int):
     return "\n".join(history)
 
 
-# 🎯 Prompt builder (WritePal-Edu)
+# =========================
+# PROMPT
+# =========================
 def build_prompt(req: ChatRequest, history: str):
     return f"""
-You are WritePal-Edu, an AI academic writing assistant designed for university students.
-
-Your job:
-- Help users improve writing skills
-- Explain clearly and simply
-- Give structured feedback
-- Be supportive but insightful
+You are WritePal-Edu, an AI academic writing assistant for university students.
 
 Mode: {req.mode}
 Language: {req.language}
 
-Instructions by mode:
-- tutor → explain mistakes, ask guiding questions
-- structure → analyze essay structure
-- outline → generate outline
-- rewrite → rewrite with improvements + explanation
-
 Conversation:
 {history}
 
-User input:
+User:
 "{req.text}"
+
+Respond in this format:
+
+### 🧠 Insight
+
+### 🔍 Suggestions
+- ...
+
+### ✏️ Try this
 """
 
 
+# =========================
+# API
+# =========================
 @router.post("/chat")
 def chat(req: ChatRequest, db: Session = Depends(get_db)):
 
-    # 🔹 1. Save user message
+    # ❗ tránh input rỗng
+    if not req.text.strip():
+        return {"response": "⚠️ Empty input"}
+
+    # 1. save user
     db.add(Message(
         conversation_id=req.conversation_id,
         role="user",
@@ -72,25 +81,52 @@ def chat(req: ChatRequest, db: Session = Depends(get_db)):
     ))
     db.commit()
 
-    # 🔹 2. Get history
+    # 2. history
     history = get_history(db, req.conversation_id)
 
-    # 🔹 3. Build prompt
+    # 3. prompt
     prompt = build_prompt(req, history)
 
-    # 🔹 4. Call Gemini
+    # =========================
+    # 4. CALL GEMINI (SAFE)
+    # =========================
     try:
         res = client.models.generate_content(
             model="gemini-2.5-flash",
             contents=prompt
         )
 
-        reply = res.text if hasattr(res, "text") and res.text else "⚠️ Empty response"
+        reply = None
+
+        # ưu tiên res.text
+        if hasattr(res, "text") and res.text:
+            reply = res.text
+
+        # fallback candidates
+        elif hasattr(res, "candidates") and res.candidates:
+            try:
+                candidate = res.candidates[0]
+
+                if (
+                    hasattr(candidate, "content")
+                    and candidate.content
+                    and hasattr(candidate.content, "parts")
+                    and candidate.content.parts
+                ):
+                    reply = candidate.content.parts[0].text
+
+            except Exception:
+                reply = None
+
+        # fallback cuối
+        if not reply:
+            reply = "⚠️ Empty response"
 
     except Exception as e:
-        reply = f"⚠️ AI error: {str(e)}"
+        print("GEMINI ERROR:", e)
+        reply = "⚠️ AI temporarily unavailable"
 
-    # 🔹 5. Save assistant message
+    # 5. save assistant
     db.add(Message(
         conversation_id=req.conversation_id,
         role="assistant",
@@ -98,5 +134,5 @@ def chat(req: ChatRequest, db: Session = Depends(get_db)):
     ))
     db.commit()
 
-    # 🔹 6. Return response
+    # 6. return
     return {"response": reply}
