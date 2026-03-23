@@ -1,33 +1,19 @@
-function Sidebar({ chats, activeChatId, setActiveChatId, createChat, deleteChat }) {
-
+export default function Sidebar({ chats, activeChatId, setActiveChatId, createChat, deleteChat }) {
   return (
-    <div className="sidebar">
+    <div style={{width:200, background:"#eee", padding:10}}>
 
-      <button className="new-chat-btn" onClick={createChat}>
-        + New Chat
-      </button>
+      <button onClick={createChat}>+ New Chat</button>
 
-      {chats.map(chat => (
-        <div
-          key={chat.id}
-          className={`chat-item ${chat.id === activeChatId ? "active" : ""}`}
-          onClick={() => setActiveChatId(chat.id)}
-        >
-          <span className="chat-title">{chat.title}</span>
+      {chats.map(c=>(
+        <div key={c.id} style={{marginTop:10}}>
+          <span onClick={()=>setActiveChatId(c.id)}>
+            {c.title}
+          </span>
 
-          <button
-            className="delete-btn"
-            onClick={(e)=>{
-              e.stopPropagation()
-              deleteChat(chat.id)
-            }}
-          >
-            ✕
-          </button>
+          <button onClick={()=>deleteChat(c.id)}>x</button>
         </div>
       ))}
+
     </div>
   )
 }
-
-export default Sidebar
