@@ -4,6 +4,16 @@ from sqlalchemy.sql import func
 from datetime import datetime
 
 from database import Base
+from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy import Integer, String
+
+class PreSurvey(Base):
+    __tablename__ = "pre_surveys"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    user_id: Mapped[int] = mapped_column(Integer)
+    level: Mapped[str] = mapped_column(String)
+    goal: Mapped[str] = mapped_column(String)
 
 
 class Conversation(Base):
