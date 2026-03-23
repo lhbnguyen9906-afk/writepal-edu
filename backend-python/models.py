@@ -21,7 +21,6 @@ class Message(Base):
     role: Mapped[str] = mapped_column(String)
     content: Mapped[str] = mapped_column(String)
 
-    # 🔥 FIX CHÍNH Ở ĐÂY
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         server_default=func.now()

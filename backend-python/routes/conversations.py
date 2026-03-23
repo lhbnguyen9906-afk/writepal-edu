@@ -16,11 +16,6 @@ def create_conversation(db: Session = Depends(get_db)):
     return {"conversation_id": conv.id}
 
 
-@router.get("/conversations")
-def get_conversations(db: Session = Depends(get_db)):
-    return db.query(Conversation).all()
-
-
 @router.get("/conversations/{conv_id}/messages")
 def get_messages(conv_id: int, db: Session = Depends(get_db)):
     msgs = db.query(Message).filter(Message.conversation_id == conv_id).all()

@@ -12,12 +12,11 @@ import os
 
 router = APIRouter()
 
-print("🔥 CHAT API SAFE VERSION")
+print("🔥 CHAT API FINAL")
 
 load_dotenv()
 api_key = os.getenv("GOOGLE_API_KEY")
 
-# 🔥 KHÔNG CRASH NỮA
 if not api_key:
     print("⚠️ GOOGLE_API_KEY not found")
     client = None
@@ -46,13 +45,12 @@ def get_history(db: Session, conversation_id: int) -> str:
 
 @router.post("/chat")
 def chat(req: ChatRequest, db: Session = Depends(get_db)):
-    try:
-        if client is None:
-            raise HTTPException(status_code=500, detail="AI not configured")
+    if client is None:
+        return {"response": "⚠️ AI not configured yet"}
 
-        history = get_history(db, req.conversation_id)
+    history = get_history(db, req.conversation_id)
 
-        prompt = f"""
+    prompt = f"""
 You are WritePal-Edu.
 
 History:
@@ -64,31 +62,25 @@ User:
 Answer:
 """
 
-        print("🔥 GEMINI CALLED")
+    response = client.models.generate_content(
+        model="gemini-2.5-flash",
+        contents=prompt
+    )
 
-        response = client.models.generate_content(
-            model="gemini-2.5-flash",
-            contents=prompt
-        )
+    answer = response.text
 
-        answer = response.text
+    db.add(Message(
+        conversation_id=req.conversation_id,
+        role="user",
+        content=req.message
+    ))
 
-        db.add(Message(
-            conversation_id=req.conversation_id,
-            role="user",
-            content=req.message
-        ))
+    db.add(Message(
+        conversation_id=req.conversation_id,
+        role="assistant",
+        content=answer
+    ))
 
-        db.add(Message(
-            conversation_id=req.conversation_id,
-            role="assistant",
-            content=answer
-        ))
+    db.commit()
 
-        db.commit()
-
-        return {"response": answer}
-
-    except Exception as e:
-        print("ERROR:", str(e))
-        raise HTTPException(status_code=500, detail=str(e))
+    return {"response": answer}

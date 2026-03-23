@@ -1,17 +1,11 @@
 from pydantic import BaseModel
-from typing import Optional
 
-# =========================
-# CHAT
-# =========================
+
 class ChatRequest(BaseModel):
     conversation_id: int
     message: str
-    mode: Optional[str] = "vi_en"
+    mode: str
 
 
-# =========================
-# CONVERSATION
-# =========================
 class ConversationCreate(BaseModel):
-    user_id: Optional[int] = 1  # 👈 tránh lỗi 422
+    user_id: int
