@@ -1,3 +1,4 @@
+import "./App.css"
 import { useState, useEffect } from "react"
 import Sidebar from "./components/Sidebar"
 import ChatArea from "./components/ChatArea"
