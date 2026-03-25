@@ -12,20 +12,31 @@ function App(){
   const activeChat = chats.find(c=>c.id===activeChatId)
 
   // =========================
-  // LOAD ALL CONVERSATIONS
+  // LOAD ALL CHATS
   // =========================
   const fetchChats = async ()=>{
-    const res = await fetch(`${API}/conversations`)
-    const data = await res.json()
+    try{
+      const res = await fetch(`${API}/conversations`)
+      const data = await res.json()
 
-    setChats(data.map(c=>({
-      ...c,
-      messages:[]
-    })))
+      console.log("🔥 chats:", data)
 
-    if(data.length>0){
-      setActiveChatId(data[0].id)
-      loadMessages(data[0].id)
+      if(!Array.isArray(data)) return
+
+      const formatted = data.map(c=>({
+        ...c,
+        messages:[]
+      }))
+
+      setChats(formatted)
+
+      if(formatted.length>0){
+        setActiveChatId(formatted[0].id)
+        loadMessages(formatted[0].id)
+      }
+
+    }catch(err){
+      console.error("❌ fetchChats error:", err)
     }
   }
 
@@ -33,78 +44,116 @@ function App(){
   // LOAD MESSAGES
   // =========================
   const loadMessages = async (id)=>{
-    const res = await fetch(`${API}/conversations/${id}/messages`)
-    const data = await res.json()
+    try{
+      const res = await fetch(`${API}/conversations/${id}/messages`)
+      const data = await res.json()
 
-    setChats(prev =>
-      prev.map(c =>
-        c.id===id ? {...c, messages:data} : c
+      console.log("📥 messages:", data)
+
+      if(!Array.isArray(data)) return
+
+      setChats(prev =>
+        prev.map(c =>
+          c.id===id ? {...c, messages:data} : c
+        )
       )
-    )
+
+    }catch(err){
+      console.error("❌ loadMessages error:", err)
+    }
   }
 
   // =========================
   // CREATE CHAT
   // =========================
   const createChat = async ()=>{
-    const res = await fetch(`${API}/conversations`,{method:"POST"})
-    const data = await res.json()
+    try{
+      const res = await fetch(`${API}/conversations`,{
+        method:"POST"
+      })
 
-    const newChat={
-      ...data,
-      messages:[]
+      const data = await res.json()
+
+      console.log("🆕 new chat:", data)
+
+      const newChat={
+        ...data,
+        messages:[]
+      }
+
+      setChats(prev=>[newChat,...prev])
+      setActiveChatId(data.id)
+
+    }catch(err){
+      console.error("❌ createChat error:", err)
     }
-
-    setChats(prev=>[newChat,...prev])
-    setActiveChatId(data.id)
   }
 
   // =========================
   // DELETE CHAT
   // =========================
   const deleteChat = async (id)=>{
-    await fetch(`${API}/conversations/${id}`,{method:"DELETE"})
+    try{
+      await fetch(`${API}/conversations/${id}`,{
+        method:"DELETE"
+      })
 
-    setChats(prev=>{
-      const updated = prev.filter(c=>c.id!==id)
+      setChats(prev=>{
+        const updated = prev.filter(c=>c.id!==id)
 
-      if(activeChatId===id){
-        setActiveChatId(updated.length ? updated[0].id : null)
-      }
+        if(activeChatId===id){
+          setActiveChatId(updated.length ? updated[0].id : null)
+        }
 
-      return updated
-    })
+        return updated
+      })
+
+    }catch(err){
+      console.error("❌ delete error:", err)
+    }
   }
 
   // =========================
   // SEND MESSAGE
   // =========================
   const sendMessage = async (text)=>{
-    if(!text || !activeChatId) return
+    console.log("📨 sendMessage", text, activeChatId)
 
-    const res = await fetch(`${API}/chat`,{
-      method:"POST",
-      headers:{ "Content-Type":"application/json" },
-      body: JSON.stringify({
-        conversation_id: activeChatId,
-        message: text,
-        mode:"vi_en"
+    if(!text || !activeChatId){
+      console.log("❌ blocked")
+      return
+    }
+
+    try{
+      const res = await fetch(`${API}/chat`,{
+        method:"POST",
+        headers:{ "Content-Type":"application/json" },
+        body: JSON.stringify({
+          conversation_id: activeChatId,
+          message: text,
+          mode:"vi_en"
+        })
       })
-    })
 
-    const data = await res.json()
+      const data = await res.json()
 
-    const newMessages=[
-      ...activeChat.messages,
-      {role:"user",content:text},
-      {role:"assistant",content:data.response}
-    ]
+      console.log("🤖 AI:", data)
 
-    setChats(prev =>
-      prev.map(c =>
-        c.id===activeChatId ? {...c, messages:newMessages} : c
+      const newMessages=[
+        ...(activeChat?.messages || []),
+        {role:"user",content:text},
+        {role:"assistant",content:data.response}
+      ]
+
+      setChats(prev =>
+        prev.map(c =>
+          c.id===activeChatId ? {...c, messages:newMessages} : c
+        )
       )
-    )
+
+    }catch(err){
+      console.error("❌ chat error:", err)
+    }
   }
 
   useEffect(()=>{

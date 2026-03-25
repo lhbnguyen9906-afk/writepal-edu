@@ -7,7 +7,7 @@ export default function ChatArea({ chat, sendMessage }) {
     <div style={{padding:20}}>
 
       {/* MESSAGES */}
-      {chat.messages.map((m,i)=>(
+      {(chat.messages || []).map((m,i)=>(
         <div key={i}>
           <b>{m.role==="user"?"You":"Bot"}:</b> {m.content}
         </div>
@@ -18,7 +18,7 @@ export default function ChatArea({ chat, sendMessage }) {
         value={input}
         onChange={(e)=>setInput(e.target.value)}
         onKeyDown={(e)=>{
-          if(e.key==="Enter"){
+          if(e.key==="Enter" && input.trim()){
             sendMessage(input)
             setInput("")
           }
@@ -26,6 +26,7 @@ export default function ChatArea({ chat, sendMessage }) {
       />
 
       <button onClick={()=>{
+        if(!input.trim()) return
         sendMessage(input)
         setInput("")
       }}>
