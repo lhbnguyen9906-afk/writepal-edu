@@ -6,7 +6,7 @@ from models import Conversation, Message
 
 router = APIRouter()
 
-# 🔥 CREATE
+# CREATE
 @router.post("/conversations")
 def create_conversation(db: Session = Depends(get_db)):
     conv = Conversation(user_id=1)
@@ -19,8 +19,7 @@ def create_conversation(db: Session = Depends(get_db)):
         "title": f"Chat {conv.id}"
     }
 
-
-# 🔥 GET ALL
+# GET ALL
 @router.get("/conversations")
 def get_conversations(db: Session = Depends(get_db)):
     convs = db.query(Conversation).all()
@@ -30,8 +29,7 @@ def get_conversations(db: Session = Depends(get_db)):
         for c in convs
     ]
 
-
-# 🔥 GET MESSAGES
+# GET MESSAGES
 @router.get("/conversations/{conv_id}/messages")
 def get_messages(conv_id: int, db: Session = Depends(get_db)):
     msgs = db.query(Message).filter(
@@ -42,11 +40,3 @@ def get_messages(conv_id: int, db: Session = Depends(get_db)):
         {"role": m.role, "content": m.content}
         for m in msgs
     ]
-
-
-# 🔥 DELETE
-@router.delete("/conversations/{conv_id}")
-def delete_conversation(conv_id: int, db: Session = Depends(get_db)):
-    db.query(Conversation).filter(Conversation.id == conv_id).delete()
-    db.commit()
-    return {"ok": True}
