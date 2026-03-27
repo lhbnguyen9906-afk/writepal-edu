@@ -59,10 +59,8 @@ function App(){
     setActiveChatId(data.id)
   }
 
-  // 🔥 SEND MESSAGE
+  // SEND MESSAGE
   const sendMessage = async (text)=>{
-    console.log("SEND:", text, activeChatId)
-
     if(!text || !activeChatId){
       alert("Missing conversation_id ❌")
       return
@@ -72,7 +70,7 @@ function App(){
       method:"POST",
       headers:{ "Content-Type":"application/json" },
       body: JSON.stringify({
-        conversation_id: Number(activeChatId), // 👈 fix 422
+        conversation_id: Number(activeChatId),
         message: text,
         mode:"vi_en"
       })
@@ -99,22 +97,36 @@ function App(){
 
   return(
     <div className="app">
-      <Sidebar
-        chats={chats}
-        activeChatId={activeChatId}
-        setActiveChatId={(id)=>{
-          setActiveChatId(id)
-          loadMessages(id)
-        }}
-        createChat={createChat}
-      />
 
-      <div className="main">
-        {activeChat ? (
-          <ChatArea chat={activeChat} sendMessage={sendMessage}/>
-        ) : (
-          <div style={{padding:40}}>Click New Chat</div>
-        )}
+      {/* ✅ HEADER */}
+      <div style={{
+        padding: "10px 20px",
+        borderBottom: "1px solid #ddd",
+        fontWeight: "bold"
+      }}>
+        WritePal-Edu
+      </div>
+
+      <div style={{display:"flex", flex:1}}>
+
+        <Sidebar
+          chats={chats}
+          activeChatId={activeChatId}
+          setActiveChatId={(id)=>{
+            setActiveChatId(id)
+            loadMessages(id)
+          }}
+          createChat={createChat}
+        />
+
+        <div className="main">
+          {activeChat ? (
+            <ChatArea chat={activeChat} sendMessage={sendMessage}/>
+          ) : (
+            <div style={{padding:40}}>Click New Chat</div>
+          )}
+        </div>
+
       </div>
     </div>
   )

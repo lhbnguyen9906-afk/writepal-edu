@@ -167,3 +167,17 @@ html, body, #root {
 .main {
   flex: 1;
 }
+html, body, #root {
+  height: 100%;
+  margin: 0;
+}
+
+.app {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+}
+
+.main {
+  flex: 1;
+}
