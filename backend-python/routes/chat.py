@@ -55,47 +55,44 @@ def chat(req: ChatRequest, db: Session = Depends(get_db)):
         # 🧠 FIRST RESPONSE (REFLECTION)
         # =========================
       prompt = f"""
-You are WritePal-Edu.
-
-Student text:
-{req.message}
-
 =========================
-STRICT RULES (MANDATORY)
+RULES
 =========================
 
-- DO NOT rewrite the paragraph
-- DO NOT repeat the paragraph
-- DO NOT summarize
-- DO NOT explain everything
-
-If you break rules → response is invalid.
+- Response language: Vietnamese
+- BUT quotes from student text MUST remain in English
+- Do NOT rewrite full essay
 
 =========================
 TASK
 =========================
 
-Ask 3 Socratic questions that:
-- challenge logic
-- identify unclear claims
-- push deeper thinking
-
-Then give ONLY 1 short hint.
+1. Identify 2 strengths
+2. Identify 2 weaknesses (with exact quotes)
+3. Ask 3 Socratic questions
+4. Point out 1 hidden assumption
+5. Give 1 short hint
 
 =========================
-FORMAT (STRICT)
+FORMAT
 =========================
 
-🔎 Questions:
+🟢 Điểm mạnh:
+...
+
+🔴 Cần cải thiện:
+(quote exact English sentence)
+
+🔎 Câu hỏi:
 1.
 2.
 3.
 
-💡 Hint:
+⚠️ Thách thức:
 ...
 
-=========================
-ANSWER:
+💡 Gợi ý:
+...
 """
 
     response = client.models.generate_content(
