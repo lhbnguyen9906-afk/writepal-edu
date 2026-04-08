@@ -3,7 +3,7 @@ import Sidebar from "./components/Sidebar"
 import ChatArea from "./components/ChatArea"
 import "./App.css"
 
-const API = import.meta.env.VITE_API
+const API = import.meta.env.VITE_API_URL
 
 function App(){
 
