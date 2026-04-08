@@ -14,11 +14,18 @@ router = APIRouter()
 # INIT AI
 # =========================
 load_dotenv()
-client = genai.Client(api_key=os.getenv("GOOGLE_API_KEY"))
+
+api_key = os.getenv("GOOGLE_API_KEY")
+
+if not api_key:
+    print("⚠️ NO API KEY")
+    client = None
+else:
+    client = genai.Client(api_key=api_key)
 
 
 # =========================
-# MEMORY
+# HISTORY
 # =========================
 def get_history(db, conversation_id):
     msgs = (
@@ -42,81 +49,92 @@ def get_history(db, conversation_id):
 @router.post("/chat")
 def chat(req: ChatRequest, db: Session = Depends(get_db)):
 
-    if not req.conversation_id:
-        raise HTTPException(status_code=400, detail="Missing conversation_id")
+    if client is None:
+        raise HTTPException(status_code=500, detail="AI not configured")
 
+    message = req.message.strip()
     history = get_history(db, req.conversation_id)
 
-    # 🔥 PHÂN BIỆT STATE (INTELLIGENCE)
-    is_followup = len(history.split("\n")) > 2
+    # 🔥 detect follow-up
+    is_followup = len(message.split()) < 20
 
-    if not is_followup:
-        # =========================
-        # 🧠 FIRST RESPONSE (REFLECTION)
-        # =========================
-      prompt = f"""
-=========================
-RULES
-=========================
+    # =========================
+    # PROMPT
+    # =========================
+    if is_followup:
+        prompt = f"""
+You are WritePal-Edu.
 
-- Response language: Vietnamese
-- BUT quotes from student text MUST remain in English
+Conversation:
+{history}
+
+User question:
+{message}
+
+Task:
+- Answer briefly (2–4 sentences)
+- Clarify previous feedback
+- DO NOT repeat full analysis
+"""
+    else:
+        prompt = f"""
+You are WritePal-Edu — a writing coach.
+
+Student essay:
+{message}
+
+RULES:
+- Respond in Vietnamese
+- Keep quotes in English
 - Do NOT rewrite full essay
 
-=========================
-TASK
-=========================
+TASK:
+1. 2 strengths
+2. 2 weaknesses (with exact quotes)
+3. 3 questions
+4. 1 short hint
 
-1. Identify 2 strengths
-2. Identify 2 weaknesses (with exact quotes)
-3. Ask 3 Socratic questions
-4. Point out 1 hidden assumption
-5. Give 1 short hint
-
-=========================
-FORMAT
-=========================
+FORMAT:
 
 🟢 Điểm mạnh:
 ...
 
 🔴 Cần cải thiện:
-(quote exact English sentence)
+(quote English)
 
 🔎 Câu hỏi:
 1.
 2.
 3.
 
-⚠️ Thách thức:
-...
-
 💡 Gợi ý:
 ...
 """
 
-    response = client.models.generate_content(
-        model="gemini-2.5-flash",
-        contents=prompt
-    )
+    try:
+        response = client.models.generate_content(
+            model="gemini-2.5-flash",
+            contents=prompt
+        )
 
-    answer = response.text
+        answer = response.text if response.text else "⚠️ No response"
 
-    # =========================
-    # SAVE MEMORY
-    # =========================
-    db.add(Message(
-        conversation_id=req.conversation_id,
-        role="user",
-        content=req.message
-    ))
+        # SAVE DB
+        db.add(Message(
+            conversation_id=req.conversation_id,
+            role="user",
+            content=message
+        ))
 
-    db.add(Message(
-        conversation_id=req.conversation_id,
-        role="assistant",
-        content=answer
-    ))
+        db.add(Message(
+            conversation_id=req.conversation_id,
+            role="assistant",
+            content=answer
+        ))
 
-    db.commit()
+        db.commit()
 
-    return {"response": answer}
+        return {"response": answer}
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))

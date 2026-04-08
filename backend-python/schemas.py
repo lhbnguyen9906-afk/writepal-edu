@@ -1,26 +1,16 @@
 from pydantic import BaseModel
-from typing import Optional
 
-# =========================
-# CHAT
-# =========================
 class ChatRequest(BaseModel):
-    conversation_id: Optional[int]   # 👈 tránh 422
+    conversation_id: int
     message: str
-    mode: str
+    mode: str | None = "vi_en"
 
 
-# =========================
-# CONVERSATION
-# =========================
-class ConversationCreate(BaseModel):
-    user_id: int = 1
-
-
-# =========================
-# SURVEY (optional)
-# =========================
 class PreSurveyCreate(BaseModel):
     user_id: int
     level: str
     goal: str
+
+
+class ConversationCreate(BaseModel):
+    pass
