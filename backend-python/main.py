@@ -8,9 +8,10 @@ Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
 
+# 🔥 CORS FIX
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=["*"],  # test
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
