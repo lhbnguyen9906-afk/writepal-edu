@@ -15,10 +15,11 @@ router = APIRouter()
 # =========================
 load_dotenv()
 
-api_key = os.getenv("GOOGLE_API_KEY")
+api_key = os.getenv("GEMINI_API_KEY") # dán key của gemini 
 
+print("API KEY:", api_key)  # debug
 if not api_key:
-    print("⚠️ NO API KEY")
+    print("⚠️ NO API KEY 02")
     client = None
 else:
     client = genai.Client(api_key=api_key)

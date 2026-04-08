@@ -7,12 +7,12 @@ env_path = BASE_DIR / ".env"
 
 load_dotenv(dotenv_path=env_path)
 
-api_key = os.getenv("GOOGLE_API_KEY")
+api_key = os.getenv("GEMINI_API_KEY") #👈 dán KEY của gemini 
 
 print("API KEY:", api_key)  # 👈 debug
 
 if not api_key:
-    print("⚠️ NO API KEY")
+    print("⚠️ NO API KEY 01")
     client = None
 else:
     from google import genai
