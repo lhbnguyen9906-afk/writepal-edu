@@ -25,6 +25,13 @@ else:
 
 
 # =========================
+# LANGUAGE DETECTION
+# =========================
+def is_vietnamese(text):
+    return any(c in text for c in "ăâđêôơưáàảãạấầẩẫậ")
+
+
+# =========================
 # HISTORY
 # =========================
 def get_history(db, conversation_id):
@@ -56,7 +63,11 @@ def chat(req: ChatRequest, db: Session = Depends(get_db)):
     history = get_history(db, req.conversation_id)
 
     # 🔥 detect follow-up
-    is_followup = len(message.split()) < 20
+    is_followup = len(message.split()) < 20 and len(history) > 0
+
+    # 🔥 detect language
+    use_vi = is_vietnamese(message)
+    lang_instruction = "Respond in Vietnamese" if use_vi else "Respond in English"
 
     # =========================
     # PROMPT
@@ -68,46 +79,52 @@ You are WritePal-Edu.
 Conversation:
 {history}
 
-User question:
+User follow-up:
 {message}
 
-Task:
-- Answer briefly (2–4 sentences)
-- Clarify previous feedback
-- DO NOT repeat full analysis
+IMPORTANT:
+- This is NOT a new essay
+- This is a follow-up
+
+TASK:
+- Answer briefly (2–3 sentences)
+- Refer to previous feedback
+- {lang_instruction}
+
+DO NOT repeat full analysis
 """
     else:
         prompt = f"""
-You are WritePal-Edu — a writing coach.
+You are WritePal-Edu — a writing tutor.
 
-Student essay:
+Essay:
 {message}
 
 RULES:
-- Respond in Vietnamese
-- Keep quotes in English
+- {lang_instruction}
+- Keep quotes in original language
 - Do NOT rewrite full essay
 
 TASK:
 1. 2 strengths
-2. 2 weaknesses (with exact quotes)
+2. 2 weaknesses (with quotes)
 3. 3 questions
-4. 1 short hint
+4. 1 hint
 
 FORMAT:
 
-🟢 Điểm mạnh:
+🟢 Strengths:
 ...
 
-🔴 Cần cải thiện:
-(quote English)
+🔴 Weaknesses:
+(quote original)
 
-🔎 Câu hỏi:
+🔎 Questions:
 1.
 2.
 3.
 
-💡 Gợi ý:
+💡 Hint:
 ...
 """
 
@@ -117,7 +134,11 @@ FORMAT:
             contents=prompt
         )
 
-        answer = response.text if response.text else "⚠️ No response"
+        # 🔥 SAFE PARSE (KHÔNG CRASH)
+        answer = getattr(response, "text", None)
+
+        if not answer:
+            answer = "⚠️ AI did not return text"
 
         # SAVE DB
         db.add(Message(
@@ -137,4 +158,5 @@ FORMAT:
         return {"response": answer}
 
     except Exception as e:
+        print("🔥 ERROR:", str(e))
         raise HTTPException(status_code=500, detail=str(e))
