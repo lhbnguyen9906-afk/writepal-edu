@@ -13,6 +13,8 @@ function App(){
 
   const activeChat = chats.find(c=>c.id===activeChatId)
 
+  consol.log("API:", API)
+  consol.log("API:", `${API}/conversations`)
   // =========================
   // LOAD CHAT LIST
   // =========================
