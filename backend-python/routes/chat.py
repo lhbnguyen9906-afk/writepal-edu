@@ -17,8 +17,8 @@ load_dotenv() # lenh nay Vểcl không ử dụng được
 
 api_key = os.getenv("GEMINI_API_KEY") # dán key của gemini 
 # debug
-if not api_key:
-    raise Exception("❌ GEMINI_API_KEY not found in environment")
+#if not api_key:
+#    raise Exception("❌ GEMINI_API_KEY not found in environment")
 
 print("API KEY:", api_key)  # debug
 if not api_key:
@@ -61,7 +61,7 @@ def get_history(db, conversation_id):
 def chat(req: ChatRequest, db: Session = Depends(get_db)):
 
     if client is None:
-        raise HTTPException(status_code=500, detail="AI not configured")
+        raise HTTPException(status_code=500, detail="AI not configured {api_key}")
 
     message = req.message.strip()
     history = get_history(db, req.conversation_id)
