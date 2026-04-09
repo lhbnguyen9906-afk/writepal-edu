@@ -13,9 +13,12 @@ router = APIRouter()
 # =========================
 # INIT AI
 # =========================
-load_dotenv()
+load_dotenv() # lenh nay Vểcl không ử dụng được
 
 api_key = os.getenv("GEMINI_API_KEY") # dán key của gemini 
+# debug
+if not api_key:
+    raise Exception("❌ GEMINI_API_KEY not found in environment")
 
 print("API KEY:", api_key)  # debug
 if not api_key:
