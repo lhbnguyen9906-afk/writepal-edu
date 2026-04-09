@@ -61,7 +61,11 @@ def get_history(db, conversation_id):
 def chat(req: ChatRequest, db: Session = Depends(get_db)):
 
     if client is None:
-        raise HTTPException(status_code=500, detail="AI not configured {api_key}")
+        #raise HTTPException(status_code=500, detail="AI not configured,"+api_key)
+        raise HTTPException(
+            status_code=500,
+            detail=f"AI not configured, api_key={api_key}"
+        )
 
     message = req.message.strip()
     history = get_history(db, req.conversation_id)
