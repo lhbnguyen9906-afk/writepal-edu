@@ -53,7 +53,10 @@ def get_history(db, conversation_id):
 
     return "\n".join(history)
 
-
+@router.get("/debug-env")
+def debug_env():
+    import os
+    return {"key": os.getenv("GEMINI_API_KEY")}
 # =========================
 # CHAT
 # =========================
