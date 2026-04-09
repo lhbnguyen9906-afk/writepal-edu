@@ -20,12 +20,12 @@ api_key = os.getenv("GEMINI_API_KEY") # dán key của gemini
 #if not api_key:
 #    raise Exception("❌ GEMINI_API_KEY not found in environment")
 
-print("API KEY:", api_key)  # debug
-if not api_key:
-    print("⚠️ NO API KEY 02")
-    client = None
-else:
-    client = genai.Client(api_key=api_key)
+#print("API KEY:", api_key)  # debug
+#if not api_key:
+#    print("⚠️ NO API KEY 02")
+#    client = None
+#else:
+#    client = genai.Client(api_key=api_key)
 
 
 # =========================
@@ -59,7 +59,19 @@ def get_history(db, conversation_id):
 # =========================
 @router.post("/chat")
 def chat(req: ChatRequest, db: Session = Depends(get_db)):
+    #
+    api_key = os.getenv("GEMINI_API_KEY")
 
+    print("API KEY:", api_key)
+
+    if not api_key:
+        raise HTTPException(
+            status_code=500,
+            detail="❌ GEMINI_API_KEY not found"
+        )
+
+    client = genai.Client(api_key=api_key)
+    #
     if client is None:
         #raise HTTPException(status_code=500, detail="AI not configured,"+api_key)
         raise HTTPException(
