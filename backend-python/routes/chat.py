@@ -13,7 +13,7 @@ router = APIRouter()
 # =========================
 # INIT AI
 # =========================
-load_dotenv() # lenh nay Vểcl không ử dụng được
+#load_dotenv() # lenh nay Vểcl không ử dụng được
 
 #api_key = os.getenv("GEMINI_API_KEY") # dán key của gemini 
 # debug
