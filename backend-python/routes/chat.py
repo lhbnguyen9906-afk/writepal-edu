@@ -15,7 +15,7 @@ router = APIRouter()
 # =========================
 load_dotenv() # lenh nay Vểcl không ử dụng được
 
-api_key = os.getenv("GEMINI_API_KEY") # dán key của gemini 
+#api_key = os.getenv("GEMINI_API_KEY") # dán key của gemini 
 # debug
 #if not api_key:
 #    raise Exception("❌ GEMINI_API_KEY not found in environment")
