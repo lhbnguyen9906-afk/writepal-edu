@@ -13,7 +13,7 @@ router = APIRouter()
 # =========================
 # INIT AI
 # =========================
-#load_dotenv() # lenh nay Vểcl không ử dụng được
+load_dotenv() # lệnh này không chạy được trên github chỉ chạy ở localhost thô
 
 #api_key = os.getenv("GEMINI_API_KEY") # dán key của gemini 
 # debug
@@ -53,6 +53,7 @@ def get_history(db, conversation_id):
 
     return "\n".join(history)
 
+#debug get key
 @router.get("/debug-env")
 def debug_env():
     import os
@@ -97,7 +98,7 @@ def chat(req: ChatRequest, db: Session = Depends(get_db)):
     # =========================
     if is_followup:
         prompt = f"""
-You are WritePal-Edu.
+You are WritePal-Edu — a Socratic writing tutor.
 
 Conversation:
 {history}
@@ -108,53 +109,77 @@ User follow-up:
 IMPORTANT:
 - This is NOT a new essay
 - This is a follow-up
+- Do NOT repeat full feedback
 
 TASK:
-- Answer briefly (2–3 sentences)
-- Refer to previous feedback
+- Answer briefly (2–4 sentences)
+- Refer to previous feedback if relevant
+- Guide the student using questions
+- Avoid giving direct corrections unless asked
 - {lang_instruction}
 
-DO NOT repeat full analysis
+STYLE:
+- Be concise
+- Focus on helping the student think
 """
     else:
         prompt = f"""
-You are WritePal-Edu — a writing tutor.
+You are WritePal-Edu — a writing tutor who helps students think, not just fix writing.
 
 Essay:
 {message}
 
 RULES:
 - {lang_instruction}
-- Keep quotes in original language
-- Do NOT rewrite full essay
+- Keep quoted sentences in original language
+- Do NOT rewrite the full essay
+- Do NOT give direct corrections immediately
+- Use guiding questions instead of direct answers
 
 TASK:
-1. 2 strengths
-2. 2 weaknesses (with quotes)
-3. 3 questions
-4. 1 hint
 
-FORMAT:
+Structure Snapshot:
+- Briefly describe overall organization (2–3 sentences)
 
-🟢 Strengths:
-...
+What to Fix First:
+- Priority 1:
+- Priority 2:
+- Priority 3:
 
-🔴 Weaknesses:
-(quote original)
+Error Awareness:
+(choose 2–3 sentences from the essay)
+- Quote the sentence
+- Ask 2–3 guiding questions for each
+- Do NOT give corrected version
 
-🔎 Questions:
+Deep Thinking Questions:
 1.
 2.
 3.
 
-💡 Hint:
-...
+Stretch Task:
+- Suggest ONE improvement
+
+Focus for Revision:
+1.
+2.
+3.
+
+Key Insight:
+(1–2 sentences)
+
+STYLE:
+- Be clear, structured, concise
+- Avoid generic praise
+- Prioritize thinking over correction
 """
 
     try:
         response = client.models.generate_content(
-            #model="gemini-2.5-flash",
-            model="gemini-flash-latest",
+            #chọn model để trả lời, càng mạnh càng dễ bị quá tải, nên cân nhắc nếu bạn chạy nhiều request
+            #model="gemini-2.5-flash", # model chất lượng cao, nhưng dễ bị quá tải
+            model="gemini-flash-latest", # dễ bị quá tải
+            #model="gemini-1.5-flash", # model nhẹ hơn, ít bị quá tải, nhưng chất lượng thấp hơn
             contents=prompt
         )
 
