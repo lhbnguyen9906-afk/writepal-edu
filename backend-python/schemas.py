@@ -13,4 +13,4 @@ class PreSurveyCreate(BaseModel):
 
 
 class ConversationCreate(BaseModel):
-    pass
+    title: str | None = "New Chat"

@@ -21,6 +21,8 @@ class Conversation(Base):
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     user_id: Mapped[int] = mapped_column(Integer)
+    # Conversation title
+    title: Mapped[str] = mapped_column(String, default="New Chat")
 
 
 class Message(Base):

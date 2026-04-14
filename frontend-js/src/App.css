@@ -2,23 +2,23 @@
    THEME
 ========================= */
 :root {
-  --bg: #f1f5f9;
+  --bg: #f8fafc;
   --sidebar: #ffffff;
-  --header: #ffffff;
-  --text: #111827;
-  --bubble-ai: #e2e8f0;
-  --bubble-user: #2563eb;
-  --input-bg: #ffffff;
+  --text: #0f172a;
+  --border: #e5e7eb;
+
+  --ai: #f1f5f9;
+  --user: #2563eb;
 }
 
 body.dark {
   --bg: #0f172a;
-  --sidebar: #1e293b;
-  --header: #1e293b;
+  --sidebar: #111827;
   --text: #f8fafc;
-  --bubble-ai: #334155;
-  --bubble-user: #3b82f6;
-  --input-bg: #1e293b;
+  --border: #1f2937;
+
+  --ai: #1e293b;
+  --user: #3b82f6;
 }
 
 /* =========================
@@ -30,11 +30,11 @@ html, body, #root {
 }
 
 body {
-  font-family: sans-serif;
+  font-family: system-ui, sans-serif;
   background: var(--bg);
   color: var(--text);
-  overflow: hidden;
 }
+
 
 /* =========================
    LAYOUT
@@ -42,48 +42,238 @@ body {
 .app {
   display: flex;
   height: 100vh;
-  overflow: hidden;
 }
 
 .layout {
   display: flex;
-  flex: 1;
-  overflow: hidden;
+  width: 100%;
 }
 
-.sidebar {
-  width: 220px;
-  background: var(--sidebar);
-  padding: 20px;
-  border-right: 1px solid #ddd;
+/* =========================
+   SIDEBAR
+========================= */
+/* .sidebar {
+  position: sticky;
+  top: 0;
+  align-self: flex-start; 
+  height: 100vh;
   overflow-y: auto;
+
+  width: 260px;
+  flex-shrink: 0;
+  background: var(--sidebar);
+  border-right: 1px solid var(--border);
+  padding: 16px;
+} */
+.sidebar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 100vh;
+  width: 260px;
+  overflow-y: auto;
+
+  background: var(--sidebar);
+  border-right: 1px solid var(--border);
+  padding: 16px;
+  z-index: 100;
 }
 
+.new-chat-btn {
+  width: 100%;
+  padding: 10px;
+  border-radius: 12px;
+  border: none;
+  background: #2563eb;
+  color: white;
+  cursor: pointer;
+  margin-bottom: 12px;
+}
+
+/* =========================
+   CHAT ITEM (CLEAN)
+========================= */
+.chat-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+  padding: 10px 12px;
+  border-radius: 10px;
+  cursor: pointer;
+  margin-bottom: 6px;
+
+  position: relative;
+  transition: 0.2s;
+}
+
+.chat-item:hover {
+  background: #f1f5f9;
+  transform: translateX(2px);
+}
+
+.chat-item.active {
+  background: #2563eb;
+  color: white;
+}
+
+body.dark .chat-item:hover {
+  background: #1e293b;
+}
+
+/* =========================
+   LEFT / RIGHT
+========================= */
+.chat-left {
+  flex: 1;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.chat-right {
+  display: flex;
+  align-items: center;
+  position: relative;
+}
+
+/* =========================
+   MENU TRIGGER
+========================= */
+.menu-trigger {
+  opacity: 0;
+  cursor: pointer;
+  padding: 6px 10px;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+}
+
+.chat-item:hover .menu-trigger,
+.chat-item.active-menu .menu-trigger {
+  opacity: 1;
+}
+
+.menu-trigger:hover {
+  background: rgba(0,0,0,0.08);
+}
+
+body.dark .menu-trigger:hover {
+  background: rgba(255,255,255,0.1);
+}
+
+/* =========================
+   DROPDOWN
+========================= */
+.menu-dropdown {
+  position: absolute;
+  right: 0;
+  top: 34px;
+
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+
+  box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+  z-index: 9999;
+
+  overflow: hidden;
+  min-width: 150px;
+
+  animation: fadeIn 0.15s ease;
+}
+
+body.dark .menu-dropdown {
+  background: #1e293b;
+}
+
+/* =========================
+   MENU ITEM
+========================= */
+.menu-item {
+  padding: 10px 14px;
+  cursor: pointer;
+  font-size: 14px;
+
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  transition: 0.2s;
+}
+
+.menu-item:hover {
+  background: #f1f5f9;
+}
+
+body.dark .menu-item:hover {
+  background: #334155;
+}
+
+.menu-item.delete {
+  color: #ef4444;
+}
+
+.menu-item.delete:hover {
+  background: #fee2e2;
+}
+
+body.dark .menu-item.delete:hover {
+  background: rgba(239,68,68,0.15);
+}
+
+/* =========================
+   MAIN
+========================= */
+/* .main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+} */
 .main {
+  margin-left: 260px;   /* 🔥 bằng width sidebar */
   flex: 1;
   display: flex;
   flex-direction: column;
-  overflow: hidden;
+  min-height: 100vh;
+  width: calc(100% - 260px);   /* 🔥 thêm dòng này */
 }
-
-.chat-area {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-}
-
 /* =========================
    HEADER
 ========================= */
 .header {
+  position: sticky;
+  top: 0;                  /* 🔥 bắt buộc để sticky hoạt động */
+  z-index: 10;
+  background: var(--bg);   /* 🔥 che nội dung cuộn phía sau */
+
+  width: 100%;
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 0 24px;
+
   height: 60px;
   display: flex;
   align-items: center;
-  padding: 0 20px;
-  font-weight: bold;
-  border-bottom: 1px solid #ddd;
-  background: var(--header);
+  font-weight: 600;
+
+  border-bottom: 1px solid var(--border);
+
+  /* margin-top: 20px; */
+  padding-bottom: 10px;
+}
+/* =========================
+   CHAT AREA
+========================= */
+.chat-area {
+  width: 100%;
+  max-width: 100%;
+
+  display: flex;
+  flex-direction: column;
+  /* height: 100vh; */
+  /* align-items: center; */
+  
 }
 
 /* =========================
@@ -92,18 +282,22 @@ body {
 .messages {
   flex: 1;
   overflow-y: auto;
-  padding: 20px;
+
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  align-items: center;
+
+  padding: 40px 20px;
+  gap: 20px;
 }
 
 /* =========================
-   BUBBLES
+   BUBBLE
 ========================= */
 .bubble-wrapper {
+  width: 100%;
+  max-width: 1000px;
   display: flex;
-  animation: fadeIn 0.25s ease;
 }
 
 .bubble-wrapper.user {
@@ -116,95 +310,265 @@ body {
 
 .user-bubble,
 .ai-bubble {
-  padding: 14px 18px;
-  border-radius: 18px;
-  max-width: 65%;
-  word-break: break-word;
-  white-space: pre-wrap;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+  padding: 16px 20px;
+  border-radius: 10px;
+  line-height: 1.6;
+  font-size: 15px;
+  max-width: 100%;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
 }
 
 .user-bubble {
-  background: var(--bubble-user);
+  max-width: 80%;
+  margin-left: auto;
+  background: linear-gradient(135deg, #2563eb, #3b82f6);
   color: white;
+  text-align: right;
 }
 
 .ai-bubble {
-  background: var(--bubble-ai);
-  color: var(--text);
+  background: var(--ai);
 }
 
 /* =========================
    INPUT
 ========================= */
 .input-container {
+
+  position: sticky;
+  bottom: 0;
+  background: var(--bg);
+  padding: 20px 0 20px 40px;
   display: flex;
-  gap: 10px;
-  padding: 15px 20px;
-  border-top: 1px solid #ddd;
-  background: var(--header);
-  flex-shrink: 0;
+  justify-content: center;
+  /* width: 100%; */
+  /* max-width: 1200px; */
+  border-radius: 16px;
 }
 
-.input-container textarea {
+.input-box {
+  width: 100%;
+  max-width: 1200px;
+  display: flex;
+  align-items: flex-end;   /* 🔥 nút luôn dính đáy textarea */
+  gap: 8px;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 8px 12px;
+  /*padding-left: 60px;*/
+  background: var(--bg);
+  position: relative;
+  justify-content: center;
+}
+
+textarea {
   flex: 1;
-  padding: 10px;
-  border-radius: 12px;
-  border: 1px solid #64748b;
-  background: var(--input-bg);
-  color: var(--text);
+  border: none;
+  outline: none;
   resize: none;
+  background: transparent;
+
+  min-height: 24px;
+  max-height: 250px;
+  overflow-y: auto;
+
+  font-size: 15px;
+  line-height: 1.5;
+  padding: 4px 0;
+  color: var(--text);
+  
 }
 
-button {
-  padding: 10px 18px;
-  border-radius: 12px;
+.send-btn {
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
   border: none;
   background: #2563eb;
   color: white;
   cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+ 
+
+.input-inner {
+  position: relative;   /* 🔥 cái này mới là anchor đúng */
+  width: 100%;
+  max-width: 800px;
 }
 
 /* =========================
-   TYPING ANIMATION
+   EMPTY
 ========================= */
-.typing {
-  display: flex;
-  gap: 6px;
-  align-items: center;
+.empty {
+  margin-top: 120px;
+  text-align: center;
+  opacity: 0.6;
 }
 
+/* =========================
+   TYPING
+========================= */
 .typing span {
   width: 6px;
   height: 6px;
   background: #999;
   border-radius: 50%;
+  margin-right: 4px;
+  display: inline-block;
   animation: blink 1.4s infinite;
 }
 
-.typing span:nth-child(2) {
-  animation-delay: 0.2s;
-}
-
-.typing span:nth-child(3) {
-  animation-delay: 0.4s;
-}
-
 @keyframes blink {
-  0%, 80%, 100% { opacity: 0.2; }
-  40% { opacity: 1; }
+  0%,80%,100%{opacity:0.2}
+  40%{opacity:1}
 }
 
 /* =========================
-   FADE IN
+   ANIMATION
 ========================= */
 @keyframes fadeIn {
   from {
     opacity: 0;
-    transform: translateY(6px);
+    transform: translateY(-6px) scale(0.98);
   }
   to {
     opacity: 1;
-    transform: translateY(0);
+    transform: translateY(0) scale(1);
   }
+}
+.chat-item.active-menu {
+  background: #f1f5f9;
+}
+.chat-right {
+  position: relative;
+  padding-bottom: 10px; /* 🔥 giúp không bị hụt hover */
+}
+
+/* =========================
+   FLOATING MENU (NEW)
+========================= */
+.menu-floating {
+  position: fixed;   /* 🔥 quan trọng */
+
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+
+  box-shadow: 0 12px 30px rgba(0,0,0,0.2);
+  z-index: 9999;
+
+  min-width: 150px;
+  overflow: hidden;
+
+  animation: fadeIn 0.15s ease;
+}
+
+body.dark .menu-floating {
+  background: #1e293b;
+}
+
+/* item */
+.menu-floating .menu-item {
+  padding: 10px 14px;
+  cursor: pointer;
+  font-size: 14px;
+
+  display: flex;
+  gap: 8px;
+  align-items: center;
+
+  line-height: 1;        /* 🔥 tránh icon bị lệch do line-height */
+}
+
+.menu-floating .menu-item span.icon {
+  width: 16px;
+  text-align: center;    /* 🔥 icon cùng width, căn giữa */
+  font-size: 14px;
+  flex-shrink: 0;
+}
+
+.menu-floating .menu-item:hover {
+  background: #f1f5f9;
+}
+
+body.dark .menu-floating .menu-item:hover {
+  background: #334155;
+}
+
+.menu-floating .delete {
+  color: #ef4444;
+}
+
+.send-row {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 8px;
+}
+
+ 
+
+.textarea-wrapper {
+  position: relative;
+  width: 100%;
+}
+
+
+/* markdown container */
+.ai-bubble {
+  line-height: 1.7;
+}
+
+/* heading */
+.ai-bubble h3 {
+  margin-top: 16px;
+  margin-bottom: 8px;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+/* bold */
+.ai-bubble strong {
+  font-weight: 600;
+  color: #1d4ed8;
+}
+
+/* italic */
+.ai-bubble em {
+  color: #475569;
+}
+
+/* list */
+.ai-bubble ul {
+  padding-left: 20px;
+  margin: 8px 0;
+}
+
+.ai-bubble li {
+  margin-bottom: 6px;
+}
+
+/* code */
+.ai-bubble code {
+  background: #e2e8f0;
+  padding: 2px 6px;
+  border-radius: 6px;
+  font-size: 13px;
+}
+
+/* blockquote */
+.ai-bubble blockquote {
+  border-left: 3px solid #2563eb;
+  padding-left: 10px;
+  color: #475569;
+  margin: 10px 0;
+}
+
+/* highlight section title */
+.ai-bubble p strong:first-child {
+  display: inline-block;
+  margin-top: 12px;
 }

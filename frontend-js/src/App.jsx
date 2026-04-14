@@ -1,4 +1,8 @@
-import { useState, useEffect } from "react"
+import { useState, 
+  useEffect
+
+ } from "react"
+
 import Sidebar from "./components/Sidebar"
 import ChatArea from "./components/ChatArea"
 import "./App.css"
@@ -11,80 +15,38 @@ function App(){
   const [activeChatId,setActiveChatId] = useState(null)
   const [isTyping, setIsTyping] = useState(false)
 
-  const activeChat = chats.find(c=>c.id===activeChatId)
+  //const activeChat = chats.find(c=>c.id===activeChatId)
 
-  console.log("API:", API)
-  console.log("API:", `${API}/conversations`)
-  // =========================
-  // LOAD CHAT LIST
-  // =========================
-  const fetchChats = async ()=>{
-    try{
-      const res = await fetch(`${API}/conversations`)
-      const data = await res.json()
+  //const [initialized, setInitialized] = useState(false)
 
-      if(!Array.isArray(data)) return
+  const activeChat = chats.find(c => Number(c.id) === Number(activeChatId))
 
-      const formatted = data.map(c=>({
-        ...c,
-        messages:[]
-      }))
-
-      setChats(formatted)
-
-      if(formatted.length>0){
-        setActiveChatId(formatted[0].id)
-        loadMessages(formatted[0].id)
-      }
-
-    }catch(err){
-      console.error("fetchChats error:", err)
-    }
-  }
-
-  // =========================
-  // LOAD MESSAGES
-  // =========================
-  const loadMessages = async (id)=>{
-    try{
-      const res = await fetch(`${API}/conversations/${id}/messages`)
-      const data = await res.json()
-
-      if(!Array.isArray(data)) return
-
-      setChats(prev =>
-        prev.map(c =>
-          c.id===id ? {...c, messages:data} : c
-        )
-      )
-
-    }catch(err){
-      console.error("loadMessages error:", err)
-    }
-  }
-
-  // =========================
-  // CREATE CHAT
+  //console.log("API:", API)
+  //console.log("API:", `${API}/conversations`)
   // =========================
   const createChat = async ()=>{
-    try{
-      const res = await fetch(`${API}/conversations`,{
-        method:"POST"
+    const title = prompt("Enter chat title:")
+
+    // ❌ nếu cancel → không tạo
+    if (title === null) return
+
+    const res = await fetch(`${API}/conversations`,{
+      method:"POST",
+      headers:{ "Content-Type":"application/json" },
+      body: JSON.stringify({
+        title: title || "New Chat"
       })
+    })
 
-      const data = await res.json()
+    const data = await res.json()
 
-      const newChat={
-        ...data,
-        messages:[]
-      }
-
-      setChats(prev=>[newChat,...prev])
-      setActiveChatId(data.id)
-
-    }catch(err){
-      console.error("createChat error:", err)
+    const newChat = {
+      ...data,
+      messages:[]
     }
+
+    setChats(prev=>[newChat,...prev])
+    setActiveChatId(data.id)
   }
 
   // =========================
@@ -155,9 +117,65 @@ function App(){
     }
   }
 
-  useEffect(()=>{
-    fetchChats()
-  },[])
+  // =========================
+  useEffect(() => {
+    let ignore = false
+
+    const run = async () => {
+      try {
+        const res = await fetch(`${API}/conversations`)
+        const data = await res.json()
+
+        if (ignore) return
+        if (!Array.isArray(data)) return
+
+        const formatted = data.map(c => ({
+          ...c,
+          messages: []
+        }))
+
+        setChats(formatted)
+
+        if (formatted.length > 0) {
+          setActiveChatId(formatted[0].id)
+        }
+
+      } catch (err) {
+        console.error(err)
+      }
+    }
+
+    run()
+
+    return () => {
+      ignore = true
+    }
+  }, [])
+
+  useEffect(() => {
+    if (!activeChatId) return
+    let ignore = false
+    const run = async () => {
+      try {
+        const res = await fetch(`${API}/conversations/${activeChatId}/messages`)
+        const data = await res.json()
+        if (ignore) return
+        setChats(prev =>
+          prev.map(c =>
+            c.id === activeChatId
+              ? { ...c, messages: data }
+              : c
+          )
+        )
+      } catch (err) {
+        console.error(err)
+      }
+    }
+    run()
+    return () => {
+      ignore = true
+    }
+  }, [activeChatId])
 
   return(
     <div className="app">
@@ -169,9 +187,10 @@ function App(){
           activeChatId={activeChatId}
           setActiveChatId={(id)=>{
             setActiveChatId(id)
-            loadMessages(id)
+            // loadMessages(id)
           }}
           createChat={createChat}
+          setChats={setChats}   // 🔥 thêm dòng này
         />
 
         <div className="main">
@@ -182,7 +201,10 @@ function App(){
               isTyping={isTyping}
             />
           ) : (
-            <div style={{padding:40}}>Click New Chat</div>
+            // <div style={{padding:40}}>Click New Chat</div>
+            <div className="empty">
+              <h2>Select or create a chat</h2>
+            </div>
           )}
         </div>
 
