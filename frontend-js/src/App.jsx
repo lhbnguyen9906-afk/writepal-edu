@@ -139,30 +139,32 @@ function App(){
   }
 }, [])
 
-  useEffect(() => {
-    if (!activeChatId) return
-    let ignore = false
-    const run = async () => {
-      try {
-        const res = await fetch(`${API}/conversations/${activeChatId}/messages`)
-        const data = await res.json()
-        if (ignore) return
-        setChats(prev =>
-          prev.map(c =>
-            c.id === activeChatId
-              ? { ...c, messages: data }
-              : c
-          )
+/*
+useEffect(() => {
+  if (!activeChatId) return
+  let ignore = false
+  const run = async () => {
+    try {
+      const res = await fetch(`${API}/conversations/${activeChatId}/messages`)
+      const data = await res.json()
+      if (ignore) return
+      setChats(prev =>
+        prev.map(c =>
+          c.id === activeChatId
+            ? { ...c, messages: data }
+            : c
         )
-      } catch (err) {
-        console.error(err)
-      }
+      )
+    } catch (err) {
+      console.error(err)
     }
-    run()
-    return () => {
-      ignore = true
-    }
-  }, [activeChatId])
+  }
+  run()
+  return () => {
+    ignore = true
+  }
+}, [activeChatId])
+*/
 
   return(
     <div className="app">
