@@ -136,7 +136,7 @@ function App(){
     setActiveChatId(saved[0].id)
   } else {
     const newChat = {
-      id: Date.now(),
+      id: crypto.randomUUID(),   // 🔥 FIX Ở ĐÂY
       title: "New Chat",
       messages: []
   }

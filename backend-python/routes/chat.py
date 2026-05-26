@@ -212,20 +212,22 @@ STYLE:
         if not answer:
             answer = "⚠️ AI did not return text"
 
-# SAVE DB (❌ tắt để tránh leak)
-# db.add(Message(
-#     conversation_id=req.conversation_id,
-#     role="user",
-#     content=message
-# ))
+        # =========================
+        # 🔥 SAVE DB (BẬT LẠI)
+        # =========================
+        db.add(Message(
+            conversation_id=req.conversation_id,
+            role="user",
+            content=message
+        ))
 
-# db.add(Message(
-#     conversation_id=req.conversation_id,
-#     role="assistant",
-#     content=answer
-# ))
+        db.add(Message(
+            conversation_id=req.conversation_id,
+            role="assistant",
+            content=answer
+        ))
 
-# db.commit()
+        db.commit()
 
         return {"response": answer}
 
