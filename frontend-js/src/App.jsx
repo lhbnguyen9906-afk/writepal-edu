@@ -87,7 +87,7 @@ function App(){
         method:"POST",
         headers:{ "Content-Type":"application/json" },
         body: JSON.stringify({
-          conversation_id: Number(activeChatId),
+          conversation_id: activeChatId,
           message: text,
           mode:"vi_en"
         })
