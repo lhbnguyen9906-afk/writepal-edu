@@ -84,7 +84,7 @@ def chat(req: ChatRequest, db: Session = Depends(get_db)):
         )
 
     message = req.message.strip()
-    history = get_history(db, req.conversation_id)
+    history = ""
 
     # 🔥 detect follow-up
     is_followup = len(message.split()) < 20 and len(history) > 0
@@ -212,20 +212,20 @@ STYLE:
         if not answer:
             answer = "⚠️ AI did not return text"
 
-        # SAVE DB
-        db.add(Message(
-            conversation_id=req.conversation_id,
-            role="user",
-            content=message
-        ))
+# SAVE DB (❌ tắt để tránh leak)
+# db.add(Message(
+#     conversation_id=req.conversation_id,
+#     role="user",
+#     content=message
+# ))
 
-        db.add(Message(
-            conversation_id=req.conversation_id,
-            role="assistant",
-            content=answer
-        ))
+# db.add(Message(
+#     conversation_id=req.conversation_id,
+#     role="assistant",
+#     content=answer
+# ))
 
-        db.commit()
+# db.commit()
 
         return {"response": answer}
 
