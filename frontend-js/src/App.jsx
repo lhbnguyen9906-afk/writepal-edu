@@ -48,7 +48,7 @@ function App(){
     const updated = [newChat, ...saved]
     localStorage.setItem("chats", JSON.stringify(updated))
 
-    setChats(prev=>[newChat,...prev])
+    setChats(updated)
     setActiveChatId(data.id)
   }
 
@@ -62,8 +62,8 @@ function App(){
     }
 
     // 👇 show user message ngay
-    setChats(prev =>
-      prev.map(c =>
+    setChats(prev => {
+        const updated = prev.map(c =>
         c.id===activeChatId
           ? {
               ...c,
@@ -73,8 +73,12 @@ function App(){
               ]
             }
           : c
-      )
     )
+    localStorage.setItem("chats", JSON.stringify(updated))
+      
+    return updated
+
+    })
 
     setIsTyping(true)
 
@@ -98,8 +102,8 @@ function App(){
 
         setIsTyping(false)
 
-        setChats(prev =>
-          prev.map(c =>
+        setChats(prev => {
+            const updated = prev.map(c =>
             c.id===activeChatId
               ? {
                   ...c,
@@ -110,7 +114,10 @@ function App(){
                 }
               : c
           )
-        )
+          localStorage.setItem("chats", JSON.stringify(updated))
+          return updated
+
+      })
 
       }, delay)
 
@@ -122,38 +129,15 @@ function App(){
 
   // =========================
   useEffect(() => {
-    let ignore = false
+  const saved = JSON.parse(localStorage.getItem("chats") || "[]")
 
-    const run = async () => {
-      try {
-        const res = await fetch(`${API}/conversations`)
-        const data = await res.json()
-
-        if (ignore) return
-        if (!Array.isArray(data)) return
-
-        const formatted = data.map(c => ({
-          ...c,
-          messages: []
-        }))
-
-        setChats(formatted)
-
-        if (formatted.length > 0) {
-          setActiveChatId(formatted[0].id)
-        }
-
-      } catch (err) {
-        console.error(err)
-      }
-    }
-
-    run()
-
-    return () => {
-      ignore = true
-    }
-  }, [])
+  if (saved.length > 0) {
+    setChats(saved)
+    setActiveChatId(saved[0].id)
+  } else {
+    createChat()
+  }
+}, [])
 
   useEffect(() => {
     if (!activeChatId) return
