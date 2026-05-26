@@ -135,8 +135,15 @@ function App(){
     setChats(saved)
     setActiveChatId(saved[0].id)
   } else {
-    createChat()
+    const newChat = {
+      id: Date.now(),
+      title: "New Chat",
+      messages: []
   }
+   setChats([newChat])
+    setActiveChatId(newChat.id)
+    localStorage.setItem("chats", JSON.stringify([newChat]))
+} 
 }, [])
 
 /*
