@@ -91,8 +91,20 @@ def chat(req: ChatRequest, db: Session = Depends(get_db)):
 
     # 🔥 detect language
     use_vi = is_vietnamese(message)
-    lang_instruction = "Respond in Vietnamese" if use_vi else "Respond in English"
 
+    if use_vi:
+        lang_instruction = (
+        "Respond in Vietnamese.\n\n"
+        "IMPORTANT:\n"
+        "- Maintain the SAME depth, detail, and reasoning as the English version\n"
+        "- Do NOT simplify, summarize, or shorten ideas\n"
+        "- Preserve all guiding questions and explanations\n"
+        "- Keep quoted text in English\n"
+        "- Use clear, natural but academically appropriate Vietnamese\n"
+        "- The explanation must feel like a real tutor thinking with the student, not a simplified translation"
+    )
+    else:
+        lang_instruction = "Respond in English."
     # =========================
     # PROMPT
     # =========================
@@ -141,6 +153,7 @@ RULES:
 - Do NOT rewrite the full essay
 - Do NOT give direct corrections immediately
 - Use guiding questions instead of direct answers
+
 
 TASK:
 - Provide corrected version

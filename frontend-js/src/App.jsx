@@ -44,6 +44,9 @@ function App(){
       ...data,
       messages:[]
     }
+    const saved = JSON.parse(localStorage.getItem("chats") || "[]")
+    const updated = [newChat, ...saved]
+    localStorage.setItem("chats", JSON.stringify(updated))
 
     setChats(prev=>[newChat,...prev])
     setActiveChatId(data.id)
