@@ -240,8 +240,13 @@ STYLE:
             role="assistant",
             content=answer
         ))
-
-        db.commit()
+        try:
+            db.commit()
+            print("✅ DB COMMIT OK")
+        except Exception as e:
+            print("❌ DB ERROR:", e)
+            db.rollback()
+            raise
 
         return {"response": answer}
 
