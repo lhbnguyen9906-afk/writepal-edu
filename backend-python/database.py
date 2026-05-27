@@ -4,11 +4,9 @@ from sqlalchemy.orm import sessionmaker, declarative_base
 
 DATABASE_URL = os.getenv("DATABASE_URL")
 
-# ✅ nếu không có → dùng SQLite local
 if not DATABASE_URL:
     DATABASE_URL = "sqlite:///./chat.db"
 
-# fix postgres prefix
 if DATABASE_URL.startswith("postgres://"):
     DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
 
@@ -29,3 +27,12 @@ SessionLocal = sessionmaker(
 )
 
 Base = declarative_base()
+
+
+# ✅ QUAN TRỌNG: phải có cái này
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
