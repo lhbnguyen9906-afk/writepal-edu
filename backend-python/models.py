@@ -6,6 +6,7 @@ from datetime import datetime
 from database import Base
 from sqlalchemy.orm import Mapped, mapped_column
 from sqlalchemy import Integer, String
+from sqlalchemy import Text
 
 class PreSurvey(Base):
     __tablename__ = "pre_surveys"
@@ -32,6 +33,8 @@ class Message(Base):
     conversation_id: Mapped[int] = mapped_column(ForeignKey("conversations.id"))
     role: Mapped[str] = mapped_column(String)
     content: Mapped[str] = mapped_column(String)
+
+    content: Mapped[str] = mapped_column(Text)
 
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
