@@ -215,6 +215,20 @@ STYLE:
         # =========================
         # 🔥 SAVE DB (BẬT LẠI)
         # =========================
+        from models import Conversation
+        # 🔥 FIX: đảm bảo conversation tồn tại
+        conv = db.query(Conversation).filter(
+            Conversation.id == req.conversation_id
+        ).first()
+        if not conv:
+            conv = Conversation()
+            db.add(conv)
+            db.commit()
+            db.refresh(conv)
+
+            req.conversation_id = conv.id
+        
+        # 🔥 lưu message user
         db.add(Message(
             conversation_id=req.conversation_id,
             role="user",
