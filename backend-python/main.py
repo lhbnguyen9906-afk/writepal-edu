@@ -2,6 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from database import Base, engine
+from models import Message 
 from routes import chat, conversations
 
 Base.metadata.create_all(bind=engine)
