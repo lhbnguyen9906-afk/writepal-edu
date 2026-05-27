@@ -4,15 +4,14 @@ from sqlalchemy.orm import sessionmaker, declarative_base
 
 DATABASE_URL = os.getenv("DATABASE_URL")
 
-# ❗ tránh crash khi None
+# ✅ nếu không có → dùng SQLite local
 if not DATABASE_URL:
-    raise ValueError("DATABASE_URL is not set")
+    DATABASE_URL = "sqlite:///./chat.db"
 
-# ❗ fix Railway / Heroku postgres prefix
+# fix postgres prefix
 if DATABASE_URL.startswith("postgres://"):
     DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
 
-# ❗ thêm connect_args cho SQLite (nếu fallback)
 connect_args = {}
 if DATABASE_URL.startswith("sqlite"):
     connect_args = {"check_same_thread": False}
@@ -30,11 +29,3 @@ SessionLocal = sessionmaker(
 )
 
 Base = declarative_base()
-
-
-def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
