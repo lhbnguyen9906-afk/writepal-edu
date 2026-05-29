@@ -88,7 +88,9 @@ def chat(req: ChatRequest, db: Session = Depends(get_db)):
         )
 
     message = req.message.strip()
-    history = ""
+    # 🔥 LIMIT INPUT (RẤT QUAN TRỌNG)
+    message = message[:2000]
+    history = get_history(db, req.conversation_id)
 
     # 🔥 detect follow-up
     is_followup = len(message.split()) < 20 and len(history) > 0
