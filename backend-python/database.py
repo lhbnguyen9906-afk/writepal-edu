@@ -6,6 +6,7 @@ from sqlalchemy.orm import sessionmaker, declarative_base
 
 DATABASE_URL = os.getenv("DATABASE_URL")
 print("🔥 ENV DATABASE_URL:", DATABASE_URL)
+print("🔥 REAL DATABASE_URL:", DATABASE_URL)
 
 if not DATABASE_URL:
     print("❌ NO DATABASE_URL → dùng SQLite")
