@@ -202,8 +202,11 @@ STYLE:
 - Avoid generic praise
 - Prioritize thinking over correction
 """
-
+    import time
     try:
+        print("🚀 CALLING GEMINI...")
+        time.sleep(1)  # chống rate limit nhẹ
+
         response = client.models.generate_content(
             #chọn model để trả lời, càng mạnh càng dễ bị quá tải, nên cân nhắc nếu bạn chạy nhiều request
             #model="gemini-2.5-flash", # model chất lượng cao, nhưng dễ bị quá tải
@@ -211,12 +214,14 @@ STYLE:
             model="gemini-1.5-flash", # model nhẹ hơn, ít bị quá tải, nhưng chất lượng thấp hơn
             contents=prompt
         )
-
-        # 🔥 SAFE PARSE (KHÔNG CRASH)
         answer = getattr(response, "text", None)
-
         if not answer:
-            answer = "⚠️ AI did not return text"
+            answer = "⚠️ Empty response from AI"
+        print("✅ GEMINI OK")
+    except Exception as e:
+        print("🔥 GEMINI ERROR DETAIL:", repr(e))
+
+        answer = "⚠️ AI is temporarily unavailable. Please try again."
 
         # =========================
         # 🔥 SAVE DB (BẬT LẠI)
@@ -227,13 +232,8 @@ STYLE:
             Conversation.id == req.conversation_id
         ).first()
         if not conv:
-            conv = Conversation()
-            db.add(conv)
-            db.commit()
-            db.refresh(conv)
-
+            raise HTTPException(status_code=400, detail="Conversation not found")
             req.conversation_id = conv.id
-        
         # 🔥 lưu message user
         db.add(Message(
             conversation_id=req.conversation_id,
@@ -241,21 +241,7 @@ STYLE:
             content=message
         ))
 
-        db.add(Message(
-            conversation_id=req.conversation_id,
-            role="assistant",
-            content=answer
-        ))
-        try:
-            db.commit()
-            print("✅ DB COMMIT OK")
-        except Exception as e:
-            print("❌ DB ERROR:", e)
-            db.rollback()
-            raise
+        db.commit()
+        
 
         return {"response": answer}
-
-    except Exception as e:
-        print("🔥 ERROR:", str(e))
-        raise HTTPException(status_code=500, detail=str(e))
