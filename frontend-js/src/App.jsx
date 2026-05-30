@@ -55,73 +55,68 @@ function App(){
   // =========================
   // SEND MESSAGE (🔥 FINAL)
   // =========================
-  const sendMessage = async (text)=>{
-    if(!text || !activeChatId){
+const sendMessage = async (text) => {
+    if (!text || !activeChatId) {
       alert("Missing conversation_id ❌")
       return
     }
 
-    // 👇 show user message ngay
-    setChats(prev => {
-        const updated = prev.map(c =>
-        c.id===activeChatId
-          ? {
-              ...c,
-              messages:[
-                ...(c.messages || []),
-                {role:"user",content:text}
-              ]
-            }
-          : c
-    )
-    localStorage.setItem("chats", JSON.stringify(updated))
-      
-    return updated
+    // 🔥 Nếu ID là UUID (không phải số) → xóa localStorage và reload
+    if (isNaN(Number(activeChatId))) {
+      console.error("Invalid conversation_id, clearing localStorage...")
+      localStorage.removeItem("chats")
+      window.location.reload()
+      return
+    }
 
+    setChats(prev => {
+      const updated = prev.map(c =>
+        c.id === activeChatId
+          ? { ...c, messages: [...(c.messages || []), { role: "user", content: text }] }
+          : c
+      )
+      localStorage.setItem("chats", JSON.stringify(updated))
+      return updated
     })
 
     setIsTyping(true)
 
-    try{
-      const res = await fetch(`${API}/chat`,{
-        method:"POST",
-        headers:{ "Content-Type":"application/json" },
+    try {
+      const res = await fetch(`${API}/chat`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           conversation_id: activeChatId,
           message: text,
-          mode:"vi_en"
+          mode: "vi_en"
         })
       })
 
-      const data = await res.json()
+      // 🔥 Check lỗi từ backend
+      if (!res.ok) {
+        console.error("Chat failed:", res.status)
+        setIsTyping(false)
+        alert("Lỗi kết nối, vui lòng tạo chat mới!")
+        return
+      }
 
-      // 🔥 delay tự nhiên
+      const data = await res.json()
       const delay = Math.min(1200, 200 + text.length * 20)
 
-      setTimeout(()=>{
-
+      setTimeout(() => {
         setIsTyping(false)
-
         setChats(prev => {
-            const updated = prev.map(c =>
-            c.id===activeChatId
-              ? {
-                  ...c,
-                  messages:[
-                    ...(c.messages || []),
-                    {role:"assistant",content:data.response}
-                  ]
-                }
+          const updated = prev.map(c =>
+            c.id === activeChatId
+              ? { ...c, messages: [...(c.messages || []), { role: "assistant", content: data.response }] }
               : c
           )
           localStorage.setItem("chats", JSON.stringify(updated))
           return updated
-
-      })
-
+        })
       }, delay)
 
-    }catch(err){
+    } catch (err) {
       console.error("chat error:", err)
       setIsTyping(false)
     }
@@ -135,15 +130,21 @@ function App(){
     setChats(saved)
     setActiveChatId(saved[0].id)
   } else {
-    const newChat = {
-      id: crypto.randomUUID(),   // 🔥 FIX Ở ĐÂY
-      title: "New Chat",
-      messages: []
+    // Tạo conversation từ backend thay vì UUID
+    fetch(`${API}/conversations`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ title: "New Chat" })
+    })
+      .then(res => res.json())
+      .then(data => {
+        const newChat = { ...data, messages: [] }
+        setChats([newChat])
+        setActiveChatId(data.id)
+        localStorage.setItem("chats", JSON.stringify([newChat]))
+      })
+      .catch(err => console.error("Failed to create chat:", err))
   }
-   setChats([newChat])
-    setActiveChatId(newChat.id)
-    localStorage.setItem("chats", JSON.stringify([newChat]))
-} 
 }, [])
 
 /*
