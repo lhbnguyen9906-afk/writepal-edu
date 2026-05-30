@@ -200,7 +200,9 @@ STYLE:
             #chọn model để trả lời, càng mạnh càng dễ bị quá tải, nên cân nhắc nếu bạn chạy nhiều request
             #model="gemini-2.5-flash", # model chất lượng cao, nhưng dễ bị quá tải
             #model="gemini-flash-latest", # dễ bị quá tải
-            model="gemini-1.5-flash", # model nhẹ hơn, ít bị quá tải, nhưng chất lượng thấp hơn
+            #model="gemini-2.0-flash", # model ổn định, chất lượng tốt
+            model="gemini-1.5-flash-latest", #model ổn định nhất
+            #model="gemini-1.5-flash", # model nhẹ hơn, ít bị quá tải, nhưng chất lượng thấp hơn
             contents=prompt
         )
 
