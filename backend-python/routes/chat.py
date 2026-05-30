@@ -84,10 +84,9 @@ def chat(req: ChatRequest, db: Session = Depends(get_db)):
         )
 
     message = req.message.strip()
-    history = ""
+    history = get_history(db, req.conversation_id)
 
-    # 🔥 detect follow-up
-    is_followup = len(message.split()) < 20 and len(history) > 0
+    is_followup = len(history) > 0 and len(message.split()) < 20
 
     # 🔥 detect language
     use_vi = is_vietnamese(message)
@@ -108,18 +107,23 @@ def chat(req: ChatRequest, db: Session = Depends(get_db)):
     # =========================
     # PROMPT
     # =========================
-    if is_followup:
+    message = req.message.strip()
+    word_count = len(message.split())
+
+    is_short = word_count < 8
+    is_question = "?" in message
+    if is_followup or is_short or is_question:
         prompt = f"""
 You are WritePal-Edu — a friendly and thoughtful writing tutor.
 
 Conversation:
 {history}
 
-User follow-up:
+User:
 {message}
 
 IMPORTANT:
-- This is a follow-up, NOT a new essay
+- This is NOT a full essay feedback
 - Do NOT give full structured feedback
 - Do NOT sound like a report
 
