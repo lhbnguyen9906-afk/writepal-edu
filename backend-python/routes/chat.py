@@ -198,7 +198,7 @@ STYLE:
     try:
         response = client.models.generate_content(
             #chọn model để trả lời, càng mạnh càng dễ bị quá tải, nên cân nhắc nếu bạn chạy nhiều request
-            model="gemini-2.5-flash-8b", # model chất lượng cao, nhưng dễ bị quá tải
+            model="gemini-3.5-flash", # model chất lượng cao, nhưng dễ bị quá tải
             #model="gemini-flash-latest", # dễ bị quá tải
             #model="gemini-2.5-flash-8b", # model ổn định, chất lượng tốt
             #model="gemini-1.5-flash", # model nhẹ hơn, ít bị quá tải, nhưng chất lượng thấp hơn
