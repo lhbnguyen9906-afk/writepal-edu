@@ -95,7 +95,7 @@ def chat(req: ChatRequest, db: Session = Depends(get_db)):
     history = get_history(db, req.conversation_id)
 
     word_count = len(message.split())
-    is_followup = len(history) > 0 and word_count < 20
+    is_followup = len(history) > 0 and word_count < 50  # tăng từ 20 lên 50
     is_short = word_count < 8
     is_question = "?" in message
     use_vi = is_vietnamese(message)
