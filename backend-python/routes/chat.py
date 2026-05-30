@@ -65,7 +65,8 @@ def get_history(db: Session, conversation_id: int) -> str:
 @router.get("/debug-env")
 def debug_env():
     import os
-    return {"key": os.getenv("GEMINI_API_KEY")}
+    key = os.getenv("GEMINI_API_KEY")
+    return {"key_found": bool(key), "key_preview": key[:8] + "..." if key else None}
 # =========================
 # CHAT
 # =========================
@@ -116,10 +117,6 @@ def chat(req: ChatRequest, db: Session = Depends(get_db)):
     # =========================
     # PROMPT
     # =========================
-    word_count = len(message.split())
-
-    is_short = word_count < 8
-    is_question = "?" in message
     if is_followup or is_short or is_question:
         prompt = f"""
 You are WritePal-Edu — a friendly and thoughtful writing tutor.
@@ -156,8 +153,6 @@ You are WritePal-Edu — a writing tutor who gives clear corrections AND helps s
 
 Essay:
 {message}
-IMPORTANT:
-- The user is asking for direct corrections, but you should NOT give them immediately
 
 RULES:
 - {lang_instruction}
