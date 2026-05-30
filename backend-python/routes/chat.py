@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from database import get_db
-from models import Message
+from models import Message, Conversation
 from schemas import ChatRequest
 
 from google import genai
@@ -67,7 +67,6 @@ def debug_env():
 # =========================
 @router.post("/chat")
 def chat(req: ChatRequest, db: Session = Depends(get_db)):
-    #
     api_key = os.getenv("GEMINI_API_KEY")
 
     print("API KEY:", api_key)
@@ -79,17 +78,11 @@ def chat(req: ChatRequest, db: Session = Depends(get_db)):
         )
 
     client = genai.Client(api_key=api_key)
-    #
-    if client is None:
-        #raise HTTPException(status_code=500, detail="AI not configured,"+api_key)
-        raise HTTPException(
-            status_code=500,
-            detail=f"AI not configured, api_key={api_key}"
-        )
+    conv = db.query(Conversation).filter(Conversation.id == req.conversation_id).first()
+    if not conv:
+        raise HTTPException(status_code=404, detail="Conversation not found")
 
-    message = req.message.strip()
-    # 🔥 LIMIT INPUT (RẤT QUAN TRỌNG)
-    message = message[:2000]
+    message = req.message.strip()[:2000]
     history = get_history(db, req.conversation_id)
 
     # 🔥 detect follow-up
@@ -202,6 +195,13 @@ STYLE:
 - Avoid generic praise
 - Prioritize thinking over correction
 """
+    user_msg = Message(
+        conversation_id=req.conversation_id,
+        role="user",
+        content=message
+    )
+    db.add(user_msg)
+    db.commit()   # commit ngay để có message_id nếu cần
     import time
     try:
         print("🚀 CALLING GEMINI...")
@@ -220,28 +220,15 @@ STYLE:
         print("✅ GEMINI OK")
     except Exception as e:
         print("🔥 GEMINI ERROR DETAIL:", repr(e))
-
         answer = "⚠️ AI is temporarily unavailable. Please try again."
 
-        # =========================
-        # 🔥 SAVE DB (BẬT LẠI)
-        # =========================
-        from models import Conversation
-        # 🔥 FIX: đảm bảo conversation tồn tại
-        conv = db.query(Conversation).filter(
-            Conversation.id == req.conversation_id
-        ).first()
-        if not conv:
-            raise HTTPException(status_code=400, detail="Conversation not found")
-            req.conversation_id = conv.id
-        # 🔥 lưu message user
-        db.add(Message(
-            conversation_id=req.conversation_id,
-            role="user",
-            content=message
-        ))
-
-        db.commit()
-        
-
-        return {"response": answer}
+ # Lưu tin nhắn assistant (dù answer có là lỗi hay không)
+    assistant_msg = Message(
+        conversation_id=req.conversation_id,
+        role="assistant",
+        content=answer
+    )
+    db.add(assistant_msg)
+    db.commit()
+    
+    return {"response": answer}
