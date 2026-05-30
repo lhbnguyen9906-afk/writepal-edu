@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from database import get_db
-from models import Message, Conversation
+from models import Message
 from schemas import ChatRequest
 
 from google import genai
@@ -57,16 +57,13 @@ def get_history(db, conversation_id):
 @router.get("/debug-env")
 def debug_env():
     import os
-    return {
-        "DATABASE_URL": os.getenv("DATABASE_URL"),
-        "GEMINI_API_KEY": os.getenv("GEMINI_API_KEY")
-    }
-
+    return {"key": os.getenv("GEMINI_API_KEY")}
 # =========================
 # CHAT
 # =========================
 @router.post("/chat")
 def chat(req: ChatRequest, db: Session = Depends(get_db)):
+    #
     api_key = os.getenv("GEMINI_API_KEY")
 
     print("API KEY:", api_key)
@@ -78,12 +75,16 @@ def chat(req: ChatRequest, db: Session = Depends(get_db)):
         )
 
     client = genai.Client(api_key=api_key)
-    conv = db.query(Conversation).filter(Conversation.id == req.conversation_id).first()
-    if not conv:
-        raise HTTPException(status_code=404, detail="Conversation not found")
+    #
+    if client is None:
+        #raise HTTPException(status_code=500, detail="AI not configured,"+api_key)
+        raise HTTPException(
+            status_code=500,
+            detail=f"AI not configured, api_key={api_key}"
+        )
 
-    message = req.message.strip()[:2000]
-    history = get_history(db, req.conversation_id)
+    message = req.message.strip()
+    history = ""
 
     # 🔥 detect follow-up
     is_followup = len(message.split()) < 20 and len(history) > 0
@@ -195,40 +196,60 @@ STYLE:
 - Avoid generic praise
 - Prioritize thinking over correction
 """
-    user_msg = Message(
-        conversation_id=req.conversation_id,
-        role="user",
-        content=message
-    )
-    db.add(user_msg)
-    db.commit()   # commit ngay để có message_id nếu cần
-    import time
-    try:
-        print("🚀 CALLING GEMINI...")
-        time.sleep(1)  # chống rate limit nhẹ
 
+    try:
         response = client.models.generate_content(
             #chọn model để trả lời, càng mạnh càng dễ bị quá tải, nên cân nhắc nếu bạn chạy nhiều request
             #model="gemini-2.5-flash", # model chất lượng cao, nhưng dễ bị quá tải
-            #model="gemini-flash-latest", # dễ bị quá tải
-            model="gemini-1.5-flash", # model nhẹ hơn, ít bị quá tải, nhưng chất lượng thấp hơn
+            model="gemini-flash-latest", # dễ bị quá tải
+            #model="gemini-1.5-flash", # model nhẹ hơn, ít bị quá tải, nhưng chất lượng thấp hơn
             contents=prompt
         )
-        answer = getattr(response, "text", None)
-        if not answer:
-            answer = "⚠️ Empty response from AI"
-        print("✅ GEMINI OK")
-    except Exception as e:
-        print("🔥 GEMINI ERROR DETAIL:", repr(e))
-        answer = "⚠️ AI is temporarily unavailable. Please try again."
 
- # Lưu tin nhắn assistant (dù answer có là lỗi hay không)
-    assistant_msg = Message(
-        conversation_id=req.conversation_id,
-        role="assistant",
-        content=answer
-    )
-    db.add(assistant_msg)
-    db.commit()
-    
-    return {"response": answer}
+        # 🔥 SAFE PARSE (KHÔNG CRASH)
+        answer = getattr(response, "text", None)
+
+        if not answer:
+            answer = "⚠️ AI did not return text"
+
+        # =========================
+        # 🔥 SAVE DB (BẬT LẠI)
+        # =========================
+        from models import Conversation
+        # 🔥 FIX: đảm bảo conversation tồn tại
+        conv = db.query(Conversation).filter(
+            Conversation.id == req.conversation_id
+        ).first()
+        if not conv:
+            conv = Conversation()
+            db.add(conv)
+            db.commit()
+            db.refresh(conv)
+
+            req.conversation_id = conv.id
+        
+        # 🔥 lưu message user
+        db.add(Message(
+            conversation_id=req.conversation_id,
+            role="user",
+            content=message
+        ))
+
+        db.add(Message(
+            conversation_id=req.conversation_id,
+            role="assistant",
+            content=answer
+        ))
+        try:
+            db.commit()
+            print("✅ DB COMMIT OK")
+        except Exception as e:
+            print("❌ DB ERROR:", e)
+            db.rollback()
+            raise
+
+        return {"response": answer}
+
+    except Exception as e:
+        print("🔥 ERROR:", str(e))
+        raise HTTPException(status_code=500, detail=str(e))
