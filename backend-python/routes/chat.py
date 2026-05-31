@@ -138,7 +138,8 @@ TASK:
 - Be flexible: answer directly if the question is clear
 - Ask AT MOST ONE question
 - NEVER ask more than one question
-- If you already asked a question, DO NOT ask another- Refer to previous feedback only if relevant
+- If you already asked a question, DO NOT ask another
+- Refer to previous feedback only if relevant
 - Prefer giving insight instead of asking questions
 - {lang_instruction}
  
